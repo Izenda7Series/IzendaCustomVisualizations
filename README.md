@@ -2,7 +2,8 @@
 
 The examples of how to customize or extend the Izenda visualizations using JS APIs.
 
-- 3D Column chart example: /src/3dcharts/3dcolumnchart.js
+- 3D column chart example: /src/3dcharts/3dcolumnchart.js
+![3D Column Chart](docs/imgs/3DColumn_Chart.png)
 
 Note that this example is using for demonstration of the flexibility of Izenda JS API to adopt the various requirements on building a custom chart.
 
