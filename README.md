@@ -11,6 +11,7 @@ The examples of how to customize or extend the Izenda visualizations using JS AP
 
 ### Installation
 
+- Download EmbeddedUI.zip in Izenda download site and extract into libs/IzendaSynergy folder
 - Change the WebAPIUrl value to Izenda Standalone BE API in /src/config.js
 - Run following npm command
 
