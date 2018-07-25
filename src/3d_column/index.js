@@ -8,7 +8,11 @@ import {
 } from 'IzendaSynergy';
 
 /**
- * Extend the chart visualization
+ * Extend the chart visualization by specifying
+ *  - Report part type to extend: REPORT_PART_TYPES.Chart
+ *  - Style name: '3DColumn'
+ *  - Base style to extend: CHART_STYLES.Column
+ *  - The 3DColumn configuration
  */
 extendReportPartStyleConfiguration(REPORT_PART_TYPES.Chart, '3DColumn', CHART_STYLES.Column, {
   /**
@@ -22,7 +26,7 @@ extendReportPartStyleConfiguration(REPORT_PART_TYPES.Chart, '3DColumn', CHART_ST
   visualLabel: '3D Column',
 
   /**
-   * Extend the chart properties panel with 3D checkbox under chart setting group
+   * Extend the Report Designer of chart properties panel with 3D checkbox under chart setting group.
    */
   propertySchema: {
     groups: {

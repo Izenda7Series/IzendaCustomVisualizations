@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import { getClass } from 'IzendaSynergy';
+import { getClass, ReportPartUtils } from 'IzendaSynergy';
 
 const ScatterChartOptionsBuilder = getClass('ScatterChartOptionsBuilder');
 const HighchartVizEngine = getClass('HighchartVizEngine');
@@ -49,7 +49,7 @@ export default class ThreeDScatterChartOptionsBuilder extends ScatterChartOption
     const nameFieldMapping = dataParser.dataStructure['valuesLabels'][0];
     const zFieldMapping = dataParser.dataStructure['ZValues'][0];
 
-    const zAxisType = HighchartUtils.getAxisType(zFieldMapping).type;
+    const zAxisType = ReportPartUtils.getAxisType(zFieldMapping).type;
     const zAxisConfig = izendaSeriesConfig[zFieldMapping.fieldNameAlias];
 
     const isMultiColor = colorByPoint && !izDisableMultiColor;
@@ -80,7 +80,7 @@ export default class ThreeDScatterChartOptionsBuilder extends ScatterChartOption
     // Extend chart options with 3D options
     $.extend(true, chartOptions, {
       zAxis: {
-        labels: { formatter: HighchartUtils.getFormattedLabelAxis },
+        labels: { formatter: ReportPartUtils.getFormattedLabelAxis },
         type: zAxisType
       },
       chart: {
