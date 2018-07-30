@@ -127,9 +127,9 @@ The configuration has been set in /webpack/webpack.common.js config file
 
 ### Step 2 - Take a sample chart and start coding
 
-The Izenda UI Javascript APIs offers multiple level of customization of the built-in visualization, e.g. chart, guage or map, as well as the tool's user interface elements that gain smoothier, better user experience just like the built-in functions.
+The Izenda UI Javascript APIs offers multiple level of customization of the built-in visualization, e.g. chart, gauge or map, as well as the tool's user interface elements to ensure a better user experience just like the built-in functions.
 
-By having configuration inheritance, it doesn't require to build a custom chart, gauge or map from scratch. Instead, you can decide which visualization to be inherited from. It ensures you write less code without sacrificing the built-in features.
+Izenda's custom visualization API inherits configuration from the Izenda application, so you don't have to build custom charts, gauges or maps from scratch. With this approach, you can base your custom item off of an existing visualization. This allows you to write less code without sacrificing built-in features.
 
 There are two common scenarios that Izenda Javascript APIs designate for:
 
