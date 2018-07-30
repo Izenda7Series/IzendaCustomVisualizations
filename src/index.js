@@ -1,9 +1,9 @@
 import './styles/index.scss';
-import highchart3d from 'highcharts/highcharts-3d';
 
 import IzendaSynergy from 'IzendaSynergy';
 import config from './config';
 
+import './3dcommon';
 import threeDColumnChart from './3d_column';
 import threeDScatterChart from './3d_scatter';
 
