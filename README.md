@@ -2,9 +2,9 @@
 
 > _Note that this example is using for demonstration of the flexibility of Izenda JS API to adopt the various requirements on building a custom chart._
 
-This repo contains code examples and materials showing how to customize or extend the Izenda visualizations using JS APIs. It is based on original 3D Highcharts examples at https://www.highcharts.com/docs/chart-concepts/3d-charts
+This repo contains code examples showing how to customize or extend the Izenda visualizations using JS APIs. It is based on original 3D Highcharts examples at https://www.highcharts.com/docs/chart-concepts/3d-charts
 
-- 3D Column chart (/src/3d_column) demonstrates the ability of extending a column chart by adding an "Enable 3D" checkbox option into property panel of report designer.
+- 3D Column chart (/src/3d_column) demonstrates the ability of extending a column chart by adding an "Enable 3D" checkbox option into the property panel of the report designer.
   ![3D Column Chart](docs/imgs/3DColumn_Chart.png)
 - 3D Scatter chart (/src/3d_scatter) demonstrates the ability of extending a scatter chart by adding an additional field container (Z-Axis Values) and rendering the scatter plot in a 3 dimensional chart.
   ![3D Scatter Chart](docs/imgs/3D_Scatter.png)
