@@ -1,6 +1,6 @@
 # Izenda Custom Visualizations
 
-> _Note that this example is using for demonstration of the flexibility of Izenda JS API to adopt the various requirements on building a custom chart._
+> _Note that this example is meant to demonstrate the flexibility of the Izenda JS API to adopt the various requirements on building a custom chart._
 
 This repo contains code examples showing how to customize or extend the Izenda visualizations using JS APIs. It is based on original 3D Highcharts examples at https://www.highcharts.com/docs/chart-concepts/3d-charts
 
@@ -135,7 +135,7 @@ There are two common scenarios that the Izenda Javascript APIs can be used for:
 
 1.  Making a custom chart type based on the standard Izenda visualization engines (Highcharts and Highmap)
 
-    - Inherit and extend options builder to change the Highchart/Highmap options in order to let it render desired visualization. You must identify what chart options need to be set for 3D column, for example https://jsfiddle.net/highcharts/2fuRA, then populate the same options in option builder.
+    - IInherit and extend the options builder to change the Highchart/Highmap options in order to let it render the desired visualization. You must identify what chart options need to be set for 3D column, for example https://jsfiddle.net/highcharts/2fuRA, then populate the same options in the option builder.
     - Use `extendReportPartStyleConfiguration` function to create a custom chart type.
 
 2.  Making a custom chart type with another new visualization engine, e.g. D3 data visualization, Bing/Google map...
