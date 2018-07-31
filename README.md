@@ -1,12 +1,12 @@
 # Izenda Custom Visualizations
 
-> _Note that this example is using for demonstration of the flexibility of Izenda JS API to adopt the various requirements on building a custom chart._
+> _Note that this example is meant to demonstrate the flexibility of the Izenda JS API to adopt the various requirements on building a custom chart._
 
-The repo contains the coding examples and materials of how to customize or extend the Izenda visualizations using JS APIs. It bases on original 3D Highcharts examples at https://www.highcharts.com/docs/chart-concepts/3d-charts
+This repo contains code examples showing how to customize or extend the Izenda visualizations using JS APIs. It is based on original 3D Highcharts examples at https://www.highcharts.com/docs/chart-concepts/3d-charts
 
-- 3D Column chart (/src/3d_column) demonstrates the ability of extending a column chart by adding a "Enable 3D" checkbox option into property panel of report designer.
+- 3D Column chart (/src/3d_column) demonstrates the ability of extending a column chart by adding an "Enable 3D" checkbox option into the property panel of the report designer.
   ![3D Column Chart](docs/imgs/3DColumn_Chart.png)
-- 3D Scatter chart (/src/3d_scatter) demonstrates the ability of extending a scatter chart by adding an additional fields container (Z-Axis Values) and rendering the scatter plots in 3 dimensions chart.
+- 3D Scatter chart (/src/3d_scatter) demonstrates the ability of extending a scatter chart by adding an additional field container (Z-Axis Values) and rendering the scatter plot in a 3 dimensional chart.
   ![3D Scatter Chart](docs/imgs/3D_Scatter.png)
 
 ### Installation
@@ -31,7 +31,7 @@ npm run dev
 npm run build
 ```
 
-## Getting Starts
+## Getting Started
 
 ### Step 1 - Integrate Izenda UI library into Webpack configuration
 
@@ -79,7 +79,7 @@ The configuration has been set in /webpack/webpack.common.js config file
       }
     }
   ],
-  // Additional assets that needs to be copied into the output path
+  // Additional assets that need to be copied into the output path
   supplements: [
     {
       path: 'assets/',
@@ -120,22 +120,22 @@ The configuration has been set in /webpack/webpack.common.js config file
     }
   ],
 
-  // The name of module exported globally. It can be accessible using the global name.
+  // The name of module exported globally. It can be accessed using the global name.
   global: 'IzendaSynergy'
 }
 ```
 
 ### Step 2 - Take a sample chart and start coding
 
-The Izenda UI Javascript APIs offers multiple level of customization of the built-in visualization, e.g. chart, gauge or map, as well as the tool's user interface elements to ensure a better user experience just like the built-in functions.
+The Izenda UI Javascript APIs offer multiple levels of customization for the built-in visualizations, e.g. chart, gauge or map, as well as the tool's user interface elements to ensure a better user experience just like the built-in functions.
 
 Izenda's custom visualization API inherits configuration from the Izenda application, so you don't have to build custom charts, gauges or maps from scratch. With this approach, you can base your custom item off of an existing visualization. This allows you to write less code without sacrificing built-in features.
 
-There are two common scenarios that Izenda Javascript APIs designate for:
+There are two common scenarios that the Izenda Javascript APIs can be used for:
 
-1.  Making a custom chart type base on Izenda provided visualization engines (Highcharts and Highmap)
+1.  Making a custom chart type based on the standard Izenda visualization engines (Highcharts and Highmap)
 
-    - Inherit and extend options builder to change the Highchart/Highmap options in order to let it render desired visualization. You need to figure out what chart options need to be set for 3D column, for example https://jsfiddle.net/highcharts/2fuRA, then populate the same options in option builder.
+    - IInherit and extend the options builder to change the Highchart/Highmap options in order to let it render the desired visualization. You must identify what chart options need to be set for 3D column, for example https://jsfiddle.net/highcharts/2fuRA, then populate the same options in the option builder.
     - Use `extendReportPartStyleConfiguration` function to create a custom chart type.
 
 2.  Making a custom chart type with another new visualization engine, e.g. D3 data visualization, Bing/Google map...
