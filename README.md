@@ -8,6 +8,8 @@ This repo contains code examples showing how to customize or extend the Izenda v
   ![3D Column Chart](docs/imgs/3DColumn_Chart.png)
 - 3D Scatter chart (/src/3d_scatter) demonstrates the ability of extending a scatter chart by adding an additional field container (Z-Axis Values) and rendering the scatter plot in a 3 dimensional chart.
   ![3D Scatter Chart](docs/imgs/3D_Scatter.png)
+- Column No Space (/src/columnnospace) demonstrates the ability of extending a column chart by altering the padding between the columns to show no space between the groupings.
+  ![Column No Space](docs/imgs/ColumnNoSpace.png)
 
 ### Installation
 
