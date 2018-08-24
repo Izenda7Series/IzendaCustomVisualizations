@@ -1,21 +1,10 @@
-import $ from 'jquery';
-import EnhancedReportPartChartContent from './EnhancedReportPartChartContent';
 import ThreeDScatterChartOptionsBuilder from './3DScatterChartOptionsBuilder';
 import {
   REPORT_PART_TYPES,
   CHART_STYLES,
   extendReportPartStyleConfiguration,
-  getReportPartConfiguration,
-  setReportPartConfiguration,
   createFieldContainerSchema
 } from 'IzendaSynergy';
-
-/**
- * Extend the model class to add a custom field container
- */
-const chartConfiguration = getReportPartConfiguration(REPORT_PART_TYPES.Chart);
-chartConfiguration.model = EnhancedReportPartChartContent;
-setReportPartConfiguration(REPORT_PART_TYPES.Chart, chartConfiguration);
 
 /**
  * Extend the chart visualization

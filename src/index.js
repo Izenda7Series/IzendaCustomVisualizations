@@ -3,10 +3,13 @@ import './styles/index.scss';
 import IzendaSynergy from 'IzendaSynergy';
 import config from './config';
 
+import './models';
 import './3dcommon';
-import threeDColumnChart from './3d_column';
-import threeDScatterChart from './3d_scatter';
+import './3d_column';
+import './3d_scatter';
 import './columnnospace';
+import './d3_timeline';
+
 // Init the configuration of Izenda
 IzendaSynergy.config(config);
 
