@@ -1,7 +1,4 @@
 .tooltip{
-	position: absolute;
-	top: 0;
-	left: 0;
 	background-color: #fff;
 	border: 2px solid #b2cbdb;
 	padding: 5px;
@@ -14,6 +11,7 @@
 	margin-top: 0px;
 	left: 8px;
 	top: 8px;
+	pointer-events: none;
 }
 .tooltip .text-name{
 	display: block;
