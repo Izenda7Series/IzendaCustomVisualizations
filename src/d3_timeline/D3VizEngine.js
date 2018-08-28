@@ -102,6 +102,10 @@ export default class D3VizEngine extends VizEngine {
 								.attr('width', width)
 								.attr('height', mainHeight);
 
+						const containerNode = d3
+								.select(chartContainer)
+								.node();
+
 						const main = svg
 								.append('g')
 								.attr('transform', 'translate(' + margin[3] + ',' + margin[0] + ')')
@@ -160,6 +164,7 @@ export default class D3VizEngine extends VizEngine {
 								.select(chartContainer)
 								.append('div')
 								.classed('tooltip', true);
+						const toolTipY = y1(1) - 6;
 
 						//main lanes and texts
 						main
@@ -254,9 +259,26 @@ export default class D3VizEngine extends VizEngine {
 
 						display();
 
-						// function showDateRange() { 		const selection = d3.event &&
-						// d3.event.selection; 		if (!selection) 				return; 		let timeRange =
-						// selection.map(x.invert); }
+						const _tooltip = function _tooltip(selection) {
+								selection
+										.on('mouseover.tooltip', function (d) {
+												const htmlTooltip = `<span class="text-name">Lane: ${d.laneName}</span><span>Value: ${d.id}</span>`;
+												tooltip
+														.transition()
+														.duration(200)
+														.style("opacity", 0.9);
+												tooltip
+														.html(htmlTooltip)
+														.style("left", `${d3.event.pageX}px`)
+														.style("top", `${d3.event.pageY}px`);
+										})
+										.on('mouseout.tooltip', () => {
+												tooltip
+														.transition()
+														.duration(500)
+														.style('opacity', 0);
+										});
+						};
 
 						function display() {
 								const selection = d3.event && d3.event.selection;
@@ -279,43 +301,27 @@ export default class D3VizEngine extends VizEngine {
 										.selectAll('rect')
 										.data(visItems, d => d.id)
 										.attr('x', d => x1(d.start))
-										.attr('width', d => x1(d.end) - x1(d.start) || x1(1));
+										.attr('width', d => x1(d.end) - x1(d.start) || 0);
 
 								rects
 										.enter()
 										.append('rect')
 										.attr('x', d => x1(d.start))
 										.attr('y', d => y1(d.lane) + 3)
-										.attr('width', d => x1(d.end) - x1(d.start) || x1(1))
+										.attr('width', d => x1(d.end) - x1(d.start) || 0)
 										.attr('height', d => y1(1) - 6)
 										.styles(d => ({
 												'stroke-width': 6,
 												'opacity': 0.6,
 												'fill': colorScale(d.lane)
 										}))
-										.on('mouseover', function (d) {
-												const point = d3.mouse(chartContainer);
-												const htmlTooltip = `<span class="text-name">Lane: ${d.laneName}</span><span>Value: ${d.id}</span>`;
-												tooltip
-														.transition()
-														.duration(200)
-														.style("opacity", .9);
-												tooltip
-														.html(htmlTooltip)
-														.style("left", `${d3.event.pageX}px`)
-														.style("top", `${d3.event.pageY - (y1(1) - 6)}px`);
-										})
-										.on('mouseout', function (d) {
-												tooltip
-														.transition()
-														.duration(500)
-														.style('opacity', 0)
-										});
+										.call(_tooltip);
 
 								rects
 										.exit()
 										.remove();
 						}
+
 				}
 		}
 }
