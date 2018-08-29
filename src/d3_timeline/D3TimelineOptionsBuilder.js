@@ -49,23 +49,15 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 				const parseData = (data, dataType) => {
 						switch (dataType) {
 								case DATA_TYPE.DATE:
-										const utcParse = d3.utcParse("%Y-%m-%dT%H:%M:%S");
 										data.forEach((item) => {
-												item.start = utcParse(item.start);
-												item.end = utcParse(item.end);
+												item.start = new Date(item.start);
+												item.end = new Date(item.end);
 												item.id = parseFloat(item.id);
 												item.laneName = lanes[item.lane];
 										});
 										break;
-								case DATA_TYPE.MONEY:
-										data.forEach((item) => {
-												item.start = utcParse(item.start);
-												item.end = utcParse(item.end);
-												item.id = parseFloat(item.id);
-												item.laneName = lanes[item.lane];
-										});
-										break;
-								case DATA_TYPE.NUMBER:
+
+								case DATA_TYPE.NUMBER || DATA_TYPE.MONEY:
 										data.forEach((item) => {
 												item.start = parseFloat(item.start);
 												item.end = parseFloat(item.end);
