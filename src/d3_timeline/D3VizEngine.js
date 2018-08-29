@@ -18,6 +18,7 @@ const DEFAULT_COLORS = [
 ];
 
 export default class D3VizEngine extends VizEngine {
+
 		draw(chartContainer, chartType, options, onCompleted) {
 				if (chartType === 'timeline') {
 						const {lanes, items: data} = options;
@@ -29,7 +30,7 @@ export default class D3VizEngine extends VizEngine {
 
 						//this config will be replaced by options which is called from api
 						const chartConfigs = {
-								timeFormat: "%Y-%m-%d",
+								timeFormat: "%m/%d/%Y",
 								xAlias: "Date",
 								tickNumber: 8,
 								freight: {
@@ -43,9 +44,8 @@ export default class D3VizEngine extends VizEngine {
 						const parseTime = d3.timeParse(chartConfigs.timeFormat);
 
 						const utcParse = d3.utcParse("%Y-%m-%dT%H:%M:%S");
-						const timeBegin = parseTime('1996-07-01');
-						const timeEnd = parseTime('1998-06-01');
-
+						// const timeBegin = parseTime('1996-07-01'); const timeEnd =
+						// parseTime('1998-06-01'); @Linh: can't use color scale for application
 						const colorScale = d3
 								.scaleOrdinal(colors)
 								.domain(data.map(d => d.lane));
@@ -55,8 +55,9 @@ export default class D3VizEngine extends VizEngine {
 								],
 								width = containerWidth - margin[1] - margin[3],
 								height = containerHeight - margin[0] - margin[2],
-								miniHeight = laneLength * 12 + 50,
-								mainHeight = height - miniHeight - 50;
+								miniHeight = laneLength * 8 + 20,
+								mainHeight = height - miniHeight - 50,
+								space = 20; //space between mini and main charts
 
 						//convert data
 						data.forEach((item) => {
@@ -65,6 +66,15 @@ export default class D3VizEngine extends VizEngine {
 								item.id = formatFloat(item.id);
 								item.laneName = lanes[item.lane];
 						});
+
+						const getTimeRange = (data) => {
+								const startList = data.map(item => item.start),
+										endList = data.map(item => item.end);
+								const range = d3.extent(d3.merge([startList, endList]));
+								return {timeBegin: range[0], timeEnd: range[1]};
+						};
+
+						const {timeBegin, timeEnd} = getTimeRange(data);
 
 						//scales
 						const x = d3
@@ -115,28 +125,33 @@ export default class D3VizEngine extends VizEngine {
 
 						const mini = svg
 								.append('g')
-								.attr('transform', 'translate(' + margin[3] + ',' + (mainHeight + margin[0]) + ')')
+								.attr('transform', `translate(${margin[3]},${ (mainHeight + margin[0] + space)})`)
 								.attr('width', width)
 								.attr('height', miniHeight)
 								.classed('mini', true);
+						// this axis for calling
+						const xAxisTopCall = d3
+										.axisTop(x1)
+										.tickFormat(timeFormat)
+										.tickSize(3)
+										.ticks(chartConfigs.tickNumber),
+								xAxisBottomCall = d3
+										.axisBottom(x)
+										.tickFormat(timeFormat)
+										.ticks(chartConfigs.tickNumber)
+										.tickSize(3);
 
 						const xAxis = svg
 								.append("g")
-								.attr("class", "axis bottom")
-								.attr("transform", `translate(${margin[3]},${height})`)
-								.call(d3.axisBottom(x).tickFormat(timeFormat).ticks(chartConfigs.tickNumber))
+								.classed("axis bottom", true)
+								.attr("transform", `translate(${margin[3]},${height + space})`)
+								.call(xAxisBottomCall)
 								.selectAll("text")
 								.style("text-anchor", "middle");
 
-						// this axis for calling
-						const xAxisTopCall = d3
-								.axisTop(x1)
-								.tickFormat(timeFormat)
-								.ticks(chartConfigs.tickNumber);
-
 						svg
 								.append("g")
-								.attr("class", "axis top")
+								.classed("axis top", true)
 								.attr("transform", `translate(${margin[3]},${margin[0] - 10})`)
 								.call(xAxisTopCall)
 								.selectAll("text")
@@ -164,7 +179,7 @@ export default class D3VizEngine extends VizEngine {
 								.select(chartContainer)
 								.append('div')
 								.classed('tooltip', true);
-						const toolTipY = y1(1) - 6;
+						const padToolTipY = y1(1) - 6;
 
 						//main lanes and texts
 						main
@@ -190,7 +205,7 @@ export default class D3VizEngine extends VizEngine {
 								.attr('y', (d, i) => y1(i + 0.5))
 								.attr('dy', '.5ex')
 								.attr('text-anchor', 'end')
-								.styles({font: '12px sans-serif'});
+								.style('font', '12px sans-serif');
 
 						//mini lanes and texts
 						mini
@@ -216,7 +231,7 @@ export default class D3VizEngine extends VizEngine {
 								.attr('y', (d, i) => y2(i + 0.5))
 								.attr('dy', '.5ex')
 								.attr('text-anchor', 'end')
-								.styles({font: '9px sans-serif'});
+								.style('font', '9px sans-serif');
 
 						const itemRects = main
 								.append('g')
@@ -247,7 +262,7 @@ export default class D3VizEngine extends VizEngine {
 										],
 										[width, miniHeight]
 								])
-								.on('brush', display);
+								.on('brush', brushed);
 
 						mini
 								.append('g')
@@ -257,20 +272,24 @@ export default class D3VizEngine extends VizEngine {
 								.attr('y', 1)
 								.attr('height', miniHeight - 1);
 
-						display();
-
-						const _tooltip = function _tooltip(selection) {
+						const _tooltip = function (selection) {
 								selection
 										.on('mouseover.tooltip', function (d) {
-												const htmlTooltip = `<span class="text-name">Lane: ${d.laneName}</span><span>Value: ${d.id}</span>`;
+												const htmlTooltip = `<p class="text-name">Lane: ${d.laneName}</p><p>Start Date: <span>${timeFormat(d.start)}</span></p><p>End Date: <span>${timeFormat(d.end)}</span></p><p>Value: <span>${d.id}</span></p>`;
+
 												tooltip
 														.transition()
 														.duration(200)
 														.style("opacity", 0.9);
 												tooltip
 														.html(htmlTooltip)
-														.style("left", `${d3.event.pageX}px`)
-														.style("top", `${d3.event.pageY}px`);
+														.style("left", `${d3.event.pageX + 5}px`)
+														.style("top", `${d3.event.pageY + 5}px`);
+										})
+										.on('mousemove.tooltip', () => {
+												tooltip
+														.style("left", `${d3.event.pageX + 5}px`)
+														.style("top", `${d3.event.pageY + 5}px`);
 										})
 										.on('mouseout.tooltip', () => {
 												tooltip
@@ -280,32 +299,45 @@ export default class D3VizEngine extends VizEngine {
 										});
 						};
 
-						function display() {
+						function brushed() {
+								//get brush selection
 								const selection = d3.event && d3.event.selection;
+
+								//return immediatelly with no detected selection
 								if (!selection) 
 										return;
-								let rects,
-										labels,
-										timeSelection = selection.map(x.invert),
+								
+								// calculate the new range and filter data which belongs to new range.
+								const timeSelection = selection.map(x.invert),
 										minExtent = timeSelection[0],
 										maxExtent = timeSelection[1],
 										visItems = data.filter(d => d.start < maxExtent && d.end > minExtent);
 
+								//update domain for main axis
 								x1.domain([minExtent, maxExtent]);
+
+								//call axis top to update with new domain
 								svg
 										.select('.axis.top')
 										.transition()
 										.call(xAxisTopCall);
-								// scale at top update main item rects
-								rects = itemRects
-										.selectAll('rect')
-										.data(visItems, d => d.id)
-										.attr('x', d => x1(d.start))
-										.attr('width', d => x1(d.end) - x1(d.start) || 0);
 
+								// select all main rects and bind data to them
+								let rects = itemRects
+										.selectAll('rect')
+										.data(visItems, d => d.id);
+
+								//remove surplus rects
 								rects
+										.exit()
+										.remove();
+
+								// add new rect and create a new selection, merge the new and the existing rects
+								// and update attributes for the merged selection
+								rects = rects
 										.enter()
 										.append('rect')
+										.merge(rects)
 										.attr('x', d => x1(d.start))
 										.attr('y', d => y1(d.lane) + 3)
 										.attr('width', d => x1(d.end) - x1(d.start) || 0)
@@ -316,10 +348,6 @@ export default class D3VizEngine extends VizEngine {
 												'fill': colorScale(d.lane)
 										}))
 										.call(_tooltip);
-
-								rects
-										.exit()
-										.remove();
 						}
 
 				}
