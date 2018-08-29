@@ -29,8 +29,7 @@ export default class D3VizEngine extends VizEngine {
 								timeBegin,
 								timeEnd,
 								scales,
-								plotBgColor,
-								entireChartBgColor,
+								pilotBgColor,
 								isShowTooltip
 						} = options;
 
@@ -67,13 +66,13 @@ export default class D3VizEngine extends VizEngine {
 								.attr('width', width + margin[1] + margin[3])
 								.attr('height', height + margin[0] + margin[2]);
 
-						const plotArea = svg
-								.append('rect')
-								.attr('transform', `translate(${margin[3]},${margin[0]})`)
+						const pilotArea = svg
+								.append('g')
+								.attr('transform', `translate(${margin[3]}, ${height})`)
 								.attr('width', width)
-								.attr('height', height - margin[2])
-								.classed('plot-area', true)
-								.attr('fill', plotBgColor);
+								.attr('height', height)
+								.classed('pilot-area', true)
+								.attr('fill', pilotBgColor);
 
 						svg
 								.append('defs')
@@ -83,14 +82,14 @@ export default class D3VizEngine extends VizEngine {
 								.attr('width', width)
 								.attr('height', mainHeight);
 
-						const main = svg
+						const main = pilotArea
 								.append('g')
 								.attr('transform', 'translate(' + margin[3] + ',' + margin[0] + ')')
 								.attr('width', width)
 								.attr('height', mainHeight)
 								.classed('main', true);
 
-						const mini = svg
+						const mini = pilotArea
 								.append('g')
 								.attr('transform', `translate(${margin[3]},${ (mainHeight + margin[0] + space)})`)
 								.attr('width', width)
@@ -111,7 +110,7 @@ export default class D3VizEngine extends VizEngine {
 						const xAxis = svg
 								.append("g")
 								.classed("axis bottom", true)
-								.attr("transform", `translate(${margin[3]},${height + space / 2})`)
+								.attr("transform", `translate(${margin[3]},${height + space})`)
 								.call(xAxisBottomCall)
 								.selectAll("text")
 								.style("text-anchor", "middle");
@@ -119,7 +118,7 @@ export default class D3VizEngine extends VizEngine {
 						svg
 								.append("g")
 								.classed("axis top", true)
-								.attr("transform", `translate(${margin[3]},${margin[0] - 1})`)
+								.attr("transform", `translate(${margin[3]},${margin[0] - 10})`)
 								.call(xAxisTopCall)
 								.selectAll("text")
 								.style("text-anchor", "middle");
@@ -145,6 +144,7 @@ export default class D3VizEngine extends VizEngine {
 								.select(chartContainer)
 								.append('div')
 								.classed('tooltip', true);
+						const padToolTipY = y1(1) - 6;
 
 						//main lanes and texts
 						main
@@ -153,16 +153,14 @@ export default class D3VizEngine extends VizEngine {
 								.data(data)
 								.enter()
 								.append('line')
-								.attr('x1', margin[1] - 10)
+								.attr('x1', margin[1])
 								.attr('y1', d => y1(d.lane))
 								.attr('x2', width)
 								.attr('y2', d => y1(d.lane))
 								.attr('stroke', 'lightgray');
 
-						svg
+						main
 								.append('g')
-								.classed('mainLaneTexts', true)
-								.attr('transform', 'translate(' + margin[3] + ',' + margin[0] + ')')
 								.selectAll('.laneText')
 								.data(lanes)
 								.enter()
@@ -181,16 +179,14 @@ export default class D3VizEngine extends VizEngine {
 								.data(data)
 								.enter()
 								.append('line')
-								.attr('x1', margin[1] - 10)
+								.attr('x1', margin[1])
 								.attr('y1', d => y2(d.lane))
 								.attr('x2', width)
 								.attr('y2', d => y2(d.lane))
 								.attr('stroke', 'lightgray');
 
-						svg
+						mini
 								.append('g')
-								.attr('transform', `translate(${margin[3]},${ (mainHeight + margin[0] + space)})`)
-								.classed('miniLaneTexts', true)
 								.selectAll('.laneText')
 								.data(lanes)
 								.enter()
@@ -239,12 +235,10 @@ export default class D3VizEngine extends VizEngine {
 								.call(brush)
 								.selectAll('rect')
 								.attr('y', 1)
-								.attr('height', miniHeight - 1);
-						//.attr('fill', pilotBgColor);
+								.attr('height', miniHeight - 1)
+								.attr('fill', pilotBgColor);
 
 						const _tooltip = function (selection) {
-								if (!isShowTooltip) 
-										return;
 								selection
 										.on('mouseover.tooltip', function (d) {
 												const htmlTooltip = `<p class="text-name">${fieldNameAlias
