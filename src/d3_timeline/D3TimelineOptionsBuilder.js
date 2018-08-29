@@ -34,11 +34,29 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 						end: record[endField.columnName]
 				})), record => record.start && record.end);
 
-				return {type: visualType, lanes, items, colors};
+				//get field Alias to display in label
+				const fieldNameAlias = {
+						groupField: groupField.fieldNameAlias,
+						labelField: labelField.fieldNameAlias,
+						startField: startField.fieldNameAlias,
+						endField: endField.fieldNameAlias
+				};
 
-				// //get field Alias to display in label const fieldNameAlias = { 	groupField:
-				// groupField.fieldNameAlias, 	labelField: labelField.fieldNameAlias,
-				// 	startField: startField.fieldNameAlias, 	endField: endField.fieldNameAlias };
+				//@Linh: get format formulas - hardcode => should have a function for detecting
+				const fieldFormats = {
+						range: '%m/%d/%Y',
+						metric: '.2f'
+				};
+
+				return {
+						type: visualType,
+						lanes,
+						items,
+						colors,
+						fieldNameAlias,
+						fieldFormats
+				};
+
 				// //get format of value const valFormat =
 				// this.containers.values[0].properties.dataFormattings.format.format ||
 				// '0,000.00'; const valFormatFormula = d3.format('.2f'); //@Linh: this is being

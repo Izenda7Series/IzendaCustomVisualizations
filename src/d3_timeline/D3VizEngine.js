@@ -21,7 +21,7 @@ export default class D3VizEngine extends VizEngine {
 
 		draw(chartContainer, chartType, options, onCompleted) {
 				if (chartType === 'timeline') {
-						const {lanes, items: data} = options;
+						const {lanes, items: data, fieldNameAlias} = options;
 						const colors = options.colors || DEFAULT_COLORS;
 						const laneLength = lanes.length;
 
@@ -31,7 +31,6 @@ export default class D3VizEngine extends VizEngine {
 						//this config will be replaced by options which is called from api
 						const chartConfigs = {
 								timeFormat: "%m/%d/%Y",
-								xAlias: "Date",
 								tickNumber: 8,
 								freight: {
 										fieldNameAlias: "Freight",
@@ -163,7 +162,7 @@ export default class D3VizEngine extends VizEngine {
 								.attr("transform", `translate( ${containerWidth / 2},${ (height + margin[0] + 20)})`)
 								.style("text-anchor", "middle")
 								.classed("chart-label", true)
-								.text(chartConfigs.xAlias);
+								.text(`${fieldNameAlias.startField} - ${fieldNameAlias.endField}`);
 
 						svg
 								.append("text")
@@ -173,7 +172,7 @@ export default class D3VizEngine extends VizEngine {
 								.attr("dy", "-1em")
 								.style("text-anchor", "middle")
 								.classed("chart-label", true)
-								.text(chartConfigs.fieldNameAlias);
+								.text('');
 
 						const tooltip = d3
 								.select(chartContainer)
@@ -275,7 +274,7 @@ export default class D3VizEngine extends VizEngine {
 						const _tooltip = function (selection) {
 								selection
 										.on('mouseover.tooltip', function (d) {
-												const htmlTooltip = `<p class="text-name">Lane: ${d.laneName}</p><p>Start Date: <span>${timeFormat(d.start)}</span></p><p>End Date: <span>${timeFormat(d.end)}</span></p><p>Value: <span>${d.id}</span></p>`;
+												const htmlTooltip = `<p class="text-name">${fieldNameAlias.groupField}: ${d.laneName}</p><p>${fieldNameAlias.startField}: <span>${timeFormat(d.start)}</span></p><p>${fieldNameAlias.endField}: <span>${timeFormat(d.end)}</span></p><p>${fieldNameAlias.labelField}: <span>${d.id}</span></p>`;
 
 												tooltip
 														.transition()
