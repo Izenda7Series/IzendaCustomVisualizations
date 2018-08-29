@@ -21,30 +21,25 @@ export default class D3VizEngine extends VizEngine {
 
 		draw(chartContainer, chartType, options, onCompleted) {
 				if (chartType === 'timeline') {
-						const {lanes, items: data, fieldNameAlias} = options;
+						const {
+								lanes,
+								items: data,
+								fieldNameAlias,
+								fieldFormats,
+								timeBegin,
+								timeEnd,
+								scales,
+								plotBgColor,
+								entireChartBgColor,
+								isShowTooltip
+						} = options;
+
 						const colors = options.colors || DEFAULT_COLORS;
 						const laneLength = lanes.length;
 
 						const containerWidth = chartContainer.clientWidth;
 						const containerHeight = chartContainer.clientHeight;
-
-						//this config will be replaced by options which is called from api
-						const chartConfigs = {
-								timeFormat: "%m/%d/%Y",
-								tickNumber: 8,
-								freight: {
-										fieldNameAlias: "Freight",
-										typeFormat: ".2f"
-								}
-						};
-
-						const formatFloat = d3.format(chartConfigs.freight.typeFormat);
-						const timeFormat = d3.timeFormat(chartConfigs.timeFormat);
-						const parseTime = d3.timeParse(chartConfigs.timeFormat);
-
-						const utcParse = d3.utcParse("%Y-%m-%dT%H:%M:%S");
-						// const timeBegin = parseTime('1996-07-01'); const timeEnd =
-						// parseTime('1998-06-01'); @Linh: can't use color scale for application
+						// @Linh: can't use color scale for application
 						const colorScale = d3
 								.scaleOrdinal(colors)
 								.domain(data.map(d => d.lane));
@@ -58,43 +53,12 @@ export default class D3VizEngine extends VizEngine {
 								mainHeight = height - miniHeight - 50,
 								space = 20; //space between mini and main charts
 
-						//convert data
-						data.forEach((item) => {
-								item.start = utcParse(item.start);
-								item.end = utcParse(item.end);
-								item.id = formatFloat(item.id);
-								item.laneName = lanes[item.lane];
-						});
-
-						const getTimeRange = (data) => {
-								const startList = data.map(item => item.start),
-										endList = data.map(item => item.end);
-								const range = d3.extent(d3.merge([startList, endList]));
-								return {timeBegin: range[0], timeEnd: range[1]};
-						};
-
-						const {timeBegin, timeEnd} = getTimeRange(data);
-
-						//scales
-						const x = d3
-										.scaleTime()
-										.domain([timeBegin, timeEnd])
-										.range([0, width]),
-								x1 = d3
-										.scaleTime()
-										.range([0, width])
-										.domain([timeBegin, timeEnd]),
-								y1 = d3
-										.scaleLinear()
-										.domain([0, lanes.length])
-										.range([0, mainHeight]),
-								y2 = d3
-										.scaleLinear()
-										.domain([0, lanes.length])
-										.range([0, miniHeight]),
-								x2 = d3
-										.scaleTime()
-										.range([0, width]); //this is for top time scale
+						const {x, x1, x2, y1, y2} = options.scales;
+						x.range([0, width]);
+						x1.range([0, width]);
+						y1.range([0, mainHeight]);
+						y2.range([0, miniHeight]);
+						x2.range([0, width]);
 
 						const svg = d3
 								.select(chartContainer)
@@ -103,6 +67,14 @@ export default class D3VizEngine extends VizEngine {
 								.attr('width', width + margin[1] + margin[3])
 								.attr('height', height + margin[0] + margin[2]);
 
+						const plotArea = svg
+								.append('rect')
+								.attr('transform', `translate(${margin[3]},${margin[0]})`)
+								.attr('width', width)
+								.attr('height', height - margin[2])
+								.classed('plot-area', true)
+								.attr('fill', plotBgColor);
+
 						svg
 								.append('defs')
 								.append('clipPath')
@@ -110,10 +82,6 @@ export default class D3VizEngine extends VizEngine {
 								.append('rect')
 								.attr('width', width)
 								.attr('height', mainHeight);
-
-						const containerNode = d3
-								.select(chartContainer)
-								.node();
 
 						const main = svg
 								.append('g')
@@ -131,19 +99,19 @@ export default class D3VizEngine extends VizEngine {
 						// this axis for calling
 						const xAxisTopCall = d3
 										.axisTop(x1)
-										.tickFormat(timeFormat)
+										.tickFormat(fieldFormats.startEndRange)
 										.tickSize(3)
-										.ticks(chartConfigs.tickNumber),
+										.ticks(8),
 								xAxisBottomCall = d3
 										.axisBottom(x)
-										.tickFormat(timeFormat)
-										.ticks(chartConfigs.tickNumber)
+										.tickFormat(fieldFormats.startEndRange)
+										.ticks(8)
 										.tickSize(3);
 
 						const xAxis = svg
 								.append("g")
 								.classed("axis bottom", true)
-								.attr("transform", `translate(${margin[3]},${height + space})`)
+								.attr("transform", `translate(${margin[3]},${height + space / 2})`)
 								.call(xAxisBottomCall)
 								.selectAll("text")
 								.style("text-anchor", "middle");
@@ -151,11 +119,10 @@ export default class D3VizEngine extends VizEngine {
 						svg
 								.append("g")
 								.classed("axis top", true)
-								.attr("transform", `translate(${margin[3]},${margin[0] - 10})`)
+								.attr("transform", `translate(${margin[3]},${margin[0] - 1})`)
 								.call(xAxisTopCall)
 								.selectAll("text")
 								.style("text-anchor", "middle");
-						// .attr("dx", "-.8em") .attr("dy", ".15em") .attr("transform", "rotate(-45)");
 
 						svg
 								.append("text")
@@ -178,7 +145,6 @@ export default class D3VizEngine extends VizEngine {
 								.select(chartContainer)
 								.append('div')
 								.classed('tooltip', true);
-						const padToolTipY = y1(1) - 6;
 
 						//main lanes and texts
 						main
@@ -193,8 +159,10 @@ export default class D3VizEngine extends VizEngine {
 								.attr('y2', d => y1(d.lane))
 								.attr('stroke', 'lightgray');
 
-						main
+						svg
 								.append('g')
+								.classed('mainLaneTexts', true)
+								.attr('transform', 'translate(' + margin[3] + ',' + margin[0] + ')')
 								.selectAll('.laneText')
 								.data(lanes)
 								.enter()
@@ -219,8 +187,10 @@ export default class D3VizEngine extends VizEngine {
 								.attr('y2', d => y2(d.lane))
 								.attr('stroke', 'lightgray');
 
-						mini
+						svg
 								.append('g')
+								.attr('transform', `translate(${margin[3]},${ (mainHeight + margin[0] + space)})`)
+								.classed('miniLaneTexts', true)
 								.selectAll('.laneText')
 								.data(lanes)
 								.enter()
@@ -270,11 +240,22 @@ export default class D3VizEngine extends VizEngine {
 								.selectAll('rect')
 								.attr('y', 1)
 								.attr('height', miniHeight - 1);
+						//.attr('fill', pilotBgColor);
 
 						const _tooltip = function (selection) {
+								if (!isShowTooltip) 
+										return;
 								selection
 										.on('mouseover.tooltip', function (d) {
-												const htmlTooltip = `<p class="text-name">${fieldNameAlias.groupField}: ${d.laneName}</p><p>${fieldNameAlias.startField}: <span>${timeFormat(d.start)}</span></p><p>${fieldNameAlias.endField}: <span>${timeFormat(d.end)}</span></p><p>${fieldNameAlias.labelField}: <span>${d.id}</span></p>`;
+												const htmlTooltip = `<p class="text-name">${fieldNameAlias
+														.groupField}: ${d
+														.laneName}</p><p>${fieldNameAlias
+														.startField}: <span>${fieldFormats
+														.startEndRange(d.start)}</span></p><p>${fieldNameAlias
+														.endField}: <span>${fieldFormats
+														.startEndRange(d.end)}</span></p><p>${fieldNameAlias
+														.labelField}: <span>${d
+														.id}</span></p>`;
 
 												tooltip
 														.transition()
