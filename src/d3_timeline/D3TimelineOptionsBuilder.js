@@ -1,51 +1,41 @@
 import {getClass} from 'IzendaSynergy';
 import * as d3 from 'd3';
-import {uniq, filter} from 'lodash';
+import {DATA_TYPE, DEFAULT_COLORS} from './D3TimelineHelper';
 
 const ChartOptionsBuilder = getClass('ChartOptionsBuilder');
 
-const DATA_TYPE = {
-		'DATE': 'Datetime',
-		'NUMBER': 'Numeric',
-		'MONEY': 'Money'
-};
-
 export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
-		constructor(...args) {
+		constructor(...args) { //@Linh: don't need to use this constructor method. because this is default for derived class.
 				super(...args);
 		}
 
 		build() {
-				const {visualType, chartOptions: {
-								colors
-						}, chartData, fieldOptions, chartContainer} = this;
-				const isShowTooltip = this.chartOptions.commonOptions.plotOptions.series.states.hover.enabled;
-				const plotBgColor = this.chartOptions.commonOptions.chart.plotBackgroundColor || 'none';
-				const entireChartBgColor = "#FFF";
+				//get essential informations from response's JSON.
+				const {chartData} = this;
 				const groupField = chartData.dataStructure['separators'][0];
 				const labelField = chartData.dataStructure['values'][0];
 				const startField = chartData.dataStructure['startRange'][0];
 				const endField = chartData.dataStructure['endRange'][0];
-
-				const lanes = uniq(chartData.records.map(record => record[groupField.columnName]));
-
-				//get field Alias to display in label
-				const fieldNameAlias = {
-						groupField: groupField.fieldNameAlias,
-						labelField: labelField.fieldNameAlias,
-						startField: startField.fieldNameAlias,
-						endField: endField.fieldNameAlias
-				};
-
-				let items = filter(chartData.records.map(record => ({
-						lane: lanes.indexOf(record[groupField.columnName]),
-						id: record[labelField.columnName],
-						start: record[startField.columnName],
-						end: record[endField.columnName]
-				})), record => record.start && record.end);
-
 				const rangeDataType = startField.reportPartElm.properties.dataFormattings.functionInfo.dataType;
-				//parse data follow field formats.
+				const lanes = [...(new Set(chartData.records.map(record => record[groupField.columnName])))] || [];
+
+				let items = [];
+				chartData
+						.records
+						.forEach(record => {
+								let item = {
+										lane: lanes.indexOf(record[groupField.columnName]),
+										id: record[labelField.columnName],
+										start: record[startField.columnName],
+										end: record[endField.columnName]
+								};
+								if (item.start && item.end) {
+										items = [
+												...items,
+												item
+										];
+								}
+						});
 				const parseData = (data, dataType) => {
 						switch (dataType) {
 								case DATA_TYPE.DATE:
@@ -72,10 +62,32 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 				};
 
 				items = parseData(items, rangeDataType);
+
+				let chartConfigs = {
+						type: this.visualType,
+						rangeDataType: startField.reportPartElm.properties.dataFormattings.functionInfo.dataType,
+						data: {
+								lanes,
+								items
+						},
+						styles: {
+								colors: this.chartOptions.colors || DEFAULT_COLORS,
+								isShowTooltip: this.chartOptions.commonOptions.plotOptions.series.states.hover.enabled || true,
+								plotBgColor: this.chartOptions.commonOptions.chart.plotBackgroundColor || 'none'
+						},
+						fieldNameAlias: {
+								groupField: groupField.fieldNameAlias,
+								labelField: labelField.fieldNameAlias,
+								startField: startField.fieldNameAlias,
+								endField: endField.fieldNameAlias
+						},
+						range: {},
+						scales: {}
+				};
+
 				//@Linh: get format formulas - hardcode => should have a function for detecting
 				const getFieldFormats = (dataType) => {
 						let fieldFormats = {};
-
 						switch (dataType) {
 								case DATA_TYPE.DATE:
 										fieldFormats.startEndRange = d3.timeFormat('%m-%d-%Y');
@@ -95,6 +107,7 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 						return fieldFormats;
 				};
 				const fieldFormats = getFieldFormats(rangeDataType);
+				chartConfigs.fieldFormats = fieldFormats;
 
 				//get ranges for extent
 				const getTimeRange = (data) => {
@@ -105,6 +118,10 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 				};
 
 				const {timeBegin, timeEnd} = getTimeRange(items);
+				chartConfigs.range = {
+						timeBegin,
+						timeEnd
+				};
 
 				//define scales
 				const defineScales = (dataType) => {
@@ -145,19 +162,8 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 				};
 
 				const scales = defineScales(rangeDataType);
-				return {
-						type: visualType,
-						lanes,
-						items,
-						colors,
-						fieldNameAlias,
-						fieldFormats,
-						timeBegin,
-						timeEnd,
-						scales,
-						plotBgColor,
-						entireChartBgColor,
-						isShowTooltip
-				};
+				chartConfigs.scales = scales;
+
+				return chartConfigs;
 		}
 }

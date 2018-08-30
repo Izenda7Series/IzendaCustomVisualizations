@@ -4,37 +4,30 @@ import 'd3-selection-multi';
 import './styles.css';
 
 const VizEngine = getClass('VizEngine');
-const DEFAULT_COLORS = [
-		'#7cb5ec',
-		'#434348',
-		'#90ed7d',
-		'#f7a35c',
-		'#8085e9',
-		'#f15c80',
-		'#e4d354',
-		'#2b908f',
-		'#f45b5b',
-		'#91e8e1'
-];
 
 export default class D3VizEngine extends VizEngine {
 
 		draw(chartContainer, chartType, options, onCompleted) {
 				if (chartType === 'timeline') {
 						const {
-								lanes,
-								items: data,
+								data: {
+										lanes,
+										items: data
+								},
 								fieldNameAlias,
 								fieldFormats,
-								timeBegin,
-								timeEnd,
+								range: {
+										timeBegin,
+										timeEnd
+								},
 								scales,
-								plotBgColor,
-								entireChartBgColor,
-								isShowTooltip
+								styles: {
+										colors,
+										isShowTooltip,
+										plotBgColor
+								}
 						} = options;
 
-						const colors = options.colors || DEFAULT_COLORS;
 						const laneLength = lanes.length;
 
 						const containerWidth = chartContainer.clientWidth;
@@ -53,7 +46,7 @@ export default class D3VizEngine extends VizEngine {
 								mainHeight = height - miniHeight - 50,
 								space = 20; //space between mini and main charts
 
-						const {x, x1, x2, y1, y2} = options.scales;
+						const {x, x1, x2, y1, y2} = scales;
 						x.range([0, width]);
 						x1.range([0, width]);
 						y1.range([0, mainHeight]);
@@ -96,7 +89,7 @@ export default class D3VizEngine extends VizEngine {
 								.attr('width', width)
 								.attr('height', miniHeight)
 								.classed('mini', true);
-						// this axis for calling
+
 						const xAxisTopCall = d3
 										.axisTop(x1)
 										.tickFormat(fieldFormats.startEndRange)
@@ -240,7 +233,6 @@ export default class D3VizEngine extends VizEngine {
 								.selectAll('rect')
 								.attr('y', 1)
 								.attr('height', miniHeight - 1);
-						//.attr('fill', pilotBgColor);
 
 						const _tooltip = function (selection) {
 								if (!isShowTooltip) 
@@ -279,19 +271,29 @@ export default class D3VizEngine extends VizEngine {
 										});
 						};
 
-						function brushed() {
+						function brushed(isDefault = false) {
 								//get brush selection
 								const selection = d3.event && d3.event.selection;
 
 								//return immediatelly with no detected selection
-								if (!selection) 
+								if (!selection && !isDefault) 
 										return;
 								
 								// calculate the new range and filter data which belongs to new range.
-								const timeSelection = selection.map(x.invert),
-										minExtent = timeSelection[0],
-										maxExtent = timeSelection[1],
+								let timeSelection,
+										minExtent,
+										maxExtent,
+										visItems;
+								if (isDefault) {
+										minExtent = timeBegin;
+										maxExtent = timeEnd;
 										visItems = data.filter(d => d.start < maxExtent && d.end > minExtent);
+								} else {
+										timeSelection = selection.map(x.invert);
+										minExtent = timeSelection[0];
+										maxExtent = timeSelection[1];
+										visItems = data.filter(d => d.start < maxExtent && d.end > minExtent);
+								}
 
 								//update domain for main axis
 								x1.domain([minExtent, maxExtent]);
@@ -329,7 +331,7 @@ export default class D3VizEngine extends VizEngine {
 										}))
 										.call(_tooltip);
 						}
-
+						// function brushmove() { 		debugger; 		console.log(d3.brushSelection(brush)); }
 				}
 		}
 }
