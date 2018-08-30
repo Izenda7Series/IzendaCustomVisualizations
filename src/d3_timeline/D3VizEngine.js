@@ -32,7 +32,7 @@ export default class D3VizEngine extends VizEngine {
 
 						const containerWidth = chartContainer.clientWidth;
 						const containerHeight = chartContainer.clientHeight;
-						// @Linh: can't use color scale for application
+
 						const colorScale = d3
 								.scaleOrdinal(colors)
 								.domain(data.map(d => d.lane));
@@ -234,6 +234,14 @@ export default class D3VizEngine extends VizEngine {
 								.attr('y', 1)
 								.attr('height', miniHeight - 1);
 
+						//call brush default
+						d3
+								.select('.brush')
+								.transition()
+								.call(brush.move, [
+										0, width / 3
+								]);
+
 						const _tooltip = function (selection) {
 								if (!isShowTooltip) 
 										return;
@@ -271,29 +279,19 @@ export default class D3VizEngine extends VizEngine {
 										});
 						};
 
-						function brushed(isDefault = false) {
+						function brushed() {
 								//get brush selection
 								const selection = d3.event && d3.event.selection;
 
 								//return immediatelly with no detected selection
-								if (!selection && !isDefault) 
+								if (!selection) 
 										return;
 								
 								// calculate the new range and filter data which belongs to new range.
-								let timeSelection,
-										minExtent,
-										maxExtent,
-										visItems;
-								if (isDefault) {
-										minExtent = timeBegin;
-										maxExtent = timeEnd;
+								let timeSelection = selection.map(x.invert),
+										minExtent = timeSelection[0],
+										maxExtent = timeSelection[1],
 										visItems = data.filter(d => d.start < maxExtent && d.end > minExtent);
-								} else {
-										timeSelection = selection.map(x.invert);
-										minExtent = timeSelection[0];
-										maxExtent = timeSelection[1];
-										visItems = data.filter(d => d.start < maxExtent && d.end > minExtent);
-								}
 
 								//update domain for main axis
 								x1.domain([minExtent, maxExtent]);
@@ -331,7 +329,6 @@ export default class D3VizEngine extends VizEngine {
 										}))
 										.call(_tooltip);
 						}
-						// function brushmove() { 		debugger; 		console.log(d3.brushSelection(brush)); }
 				}
 		}
 }
