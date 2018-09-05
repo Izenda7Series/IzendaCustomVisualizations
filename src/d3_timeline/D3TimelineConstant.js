@@ -97,11 +97,11 @@ export const DATETIME_FORMAT = [
 		}, {
 				id: 18,
 				text: 'yyyy - Qtr',
-				format: '%Y - '
+				format: ''
 		}, {
 				id: 19,
 				text: 'Qtr',
-				format: '%d'
+				format: ''
 		}, {
 				id: 20,
 				text: 'HH:mm tt (12-hour time)',
@@ -273,15 +273,15 @@ export const NUMERIC_FORMAT = [
 		}, {
 				id: 7,
 				text: '0.00%',
-				format: '.2%'
+				format: ''
 		}, {
 				id: 8,
 				text: '0,000.00%',
-				format: ',.2%'
+				format: ''
 		}, {
 				id: 9,
 				text: '0000%',
-				format: '.0%'
+				format: ''
 		}, {
 				id: 10,
 				text: '% of Group',

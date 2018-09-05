@@ -31,6 +31,10 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 						fieldFormatData: this.fieldOptions[labelField.fieldNameAlias].fieldFormatData
 				};
 
+				const startOptions = {
+						fieldDataType: startFieldOptions.fieldDataType
+				};
+
 				let items = [];
 				chartData
 						.records
@@ -40,7 +44,10 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 										id: record[labelField.columnName],
 										start: record[startField.columnName],
 										end: record[endField.columnName],
-										laneName: record[groupField.columnName]
+										laneName: record[groupField.columnName],
+										percentage: record[`percentage_${labelField.columnName}`]
+												? record[`percentage_${labelField.columnName}`]
+												: null
 								};
 								if (item.start && item.end) {
 										items = [
@@ -49,7 +56,7 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 										];
 								}
 								//get setting color for metric
-								let itemInCellMetricColor = ((metricOptions.cellColors.value && metricOptions.cellColors.value.find(val => val.key === item.id)) || (metricOptions.cellColors.rangeValue && metricOptions.cellColors.rangeValue.find(val => val.from <= item.id && val.to >= item.id)));
+								let itemInCellMetricColor = ((metricOptions.cellColors.value && metricOptions.cellColors.value.find(val => val.key == item.id)) || (metricOptions.cellColors.rangeValue && metricOptions.cellColors.rangeValue.find(val => val.from <= item.id && val.to >= item.id)));
 								if (itemInCellMetricColor) {
 										item.fillColor = itemInCellMetricColor.text;
 								}
@@ -77,6 +84,21 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 
 				items = parseData(items, rangeDataType);
 
+				let arrLanes = [];
+				//build new lanes array
+				lanes.forEach((lane, i) => {
+						let obj = {
+								id: i,
+								laneName: lane,
+								sum: 0
+						};
+						let arrItems = items.filter(item => item.laneName === lane);
+						obj.sum = arrItems.reduce((initial, currItem) => {
+								return initial + currItem.id
+						}, 0);
+						arrLanes.push(obj);
+				});
+
 				const metricFormat = helpers.getD3Format(metricOptions.fieldDataType, metricOptions.fieldFormatData);
 				const rangeFormat = helpers.getD3Format(startFieldOptions.fieldDataType, startFieldOptions.fieldFormatData);
 
@@ -84,7 +106,7 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 						type: this.visualType,
 						rangeDataType: startField.reportPartElm.properties.dataFormattings.functionInfo.dataType,
 						data: {
-								lanes,
+								arrLanes,
 								items
 						},
 						styles: {
@@ -106,7 +128,8 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 						},
 						fieldOptions: {
 								groupOptions,
-								metricOptions
+								metricOptions,
+								startOptions
 						}
 				};
 

@@ -2,6 +2,7 @@ import {getClass} from 'IzendaSynergy';
 import * as d3 from 'd3';
 import 'd3-selection-multi';
 import './styles.css';
+import {helpers} from './D3TimelineHelper';
 
 const VizEngine = getClass('VizEngine');
 
@@ -9,9 +10,10 @@ export default class D3VizEngine extends VizEngine {
 
 		draw(chartContainer, chartType, options, onCompleted) {
 				if (chartType === 'timeline') {
+						//extract properties from chart's options
 						const {
 								data: {
-										lanes,
+										arrLanes: lanes,
 										items: data
 								},
 								fieldNameAlias,
@@ -37,7 +39,8 @@ export default class D3VizEngine extends VizEngine {
 								},
 								fieldOptions: {
 										groupOptions,
-										metricOptions
+										metricOptions,
+										startOptions
 								}
 						} = options;
 
@@ -104,16 +107,20 @@ export default class D3VizEngine extends VizEngine {
 
 						const xAxisTopCall = d3
 										.axisTop(x1)
-										.tickFormat(d => rangeFormat
-												? rangeFormat(d)
-												: d)
+										.tickFormat(d => {
+												return rangeFormat
+														? helpers.formatData(rangeFormat, d, startOptions.fieldDataType)
+														: d;
+										})
 										.tickSize(3)
 										.ticks(8),
 								xAxisBottomCall = d3
 										.axisBottom(x)
-										.tickFormat(d => rangeFormat
-												? rangeFormat(d)
-												: d)
+										.tickFormat(d => {
+												return rangeFormat
+														? helpers.formatData(rangeFormat, d, startOptions.fieldDataType)
+														: d;
+										})
 										.ticks(8)
 										.tickSize(3);
 
@@ -192,22 +199,10 @@ export default class D3VizEngine extends VizEngine {
 								.attr('text-anchor', 'end')
 								.style('font', '12px sans-serif')
 								.attr('fill', (d) => {
-										let itemInCellGroupColor = groupOptions.cellColors.value && groupOptions
-												.cellColors
-												.value
-												.find(val => val.key === d);
-										return itemInCellGroupColor
-												? itemInCellGroupColor.text
-												: '';
+										return helpers.getSettings(groupOptions, 'cellColors', d.laneName);
 								})
 								.text((d) => {
-										let itemInOption = groupOptions.alternativeText.value && groupOptions
-												.alternativeText
-												.value
-												.find(val => val.key === d);
-										return itemInOption
-												? itemInOption.text
-												: d;
+										return helpers.getSettings(groupOptions, 'alternativeText', d.laneName);
 								});
 
 						//mini lanes and texts
@@ -236,27 +231,18 @@ export default class D3VizEngine extends VizEngine {
 								.attr('dy', '.5ex')
 								.attr('text-anchor', 'end')
 								.style('font', '9px sans-serif')
-								.attr('fill', (d, i) => {
-										let itemInOption = groupOptions.cellColors.value && groupOptions
-												.cellColors
-												.value
-												.find(val => val.key === d);
-										return itemInOption
-												? itemInOption.text
-												: '';
+								.attr('fill', (d) => {
+										return helpers.getSettings(groupOptions, 'cellColors', d.laneName);
 								})
 								.text((d) => {
-										let itemInOption = (groupOptions.alternativeText.value && groupOptions.alternativeText.value.find(val => val.key === d)) || (groupOptions.alternativeText.rangeVale && groupOptions.alternativeText.rangeVale.find(val => val.from <= d && val.to >= d));
-										return itemInOption
-												? itemInOption.text
-												: d;
+										return helpers.getSettings(groupOptions, 'alternativeText', d.laneName);
 								});
-
+						//draw rect for main area
 						const itemRects = main
 								.append('g')
 								.attr('clip-path', 'url(#clip)');
 
-						//mini item rects
+						//draw mini rects and fill color following by user settings
 						mini
 								.append('g')
 								.selectAll('miniItems')
@@ -273,7 +259,7 @@ export default class D3VizEngine extends VizEngine {
 												? d.fillColor
 												: colorScale(d.lane);
 								});
-
+						//define brush with extent [[0, 0][width, miniHeight]]
 						const brush = d3
 								.brushX()
 								.extent([
@@ -283,7 +269,7 @@ export default class D3VizEngine extends VizEngine {
 										[width, miniHeight]
 								])
 								.on('brush', brushed);
-
+						//call brush
 						mini
 								.append('g')
 								.attr('class', 'x brush')
@@ -300,6 +286,7 @@ export default class D3VizEngine extends VizEngine {
 										0, width / 3
 								]);
 
+						//timeline tooltip
 						const _tooltip = function (selection) {
 								const checkMetricAlterText = (d) => {
 										const objInOption = (metricOptions.alternativeText.value && metricOptions.alternativeText.value.find(val => val.key === d.id)) || (metricOptions.alternativeText.rangeValue && metricOptions.alternativeText.rangeValue.find(val => val.from <= d.id && val.to >= d.id));
@@ -307,25 +294,20 @@ export default class D3VizEngine extends VizEngine {
 										return objInOption
 												? objInOption.text
 												: (metricFormat
-														? metricFormat(d.id)
+														? helpers.formatData(metricFormat, d.id, metricOptions.fieldDataType)
 														: d.id);
-								};
-								const checkGroupAlterText = (d) => {
-										const objInOption = groupOptions.alternativeText.value && groupOptions
-												.alternativeText
-												.value
-												.find(val => val.key === d.laneName);
-										return objInOption
-												? objInOption.text
-												: d.laneName;
 								};
 								if (!isShowTooltip) 
 										return;
 								selection.on('mouseover.tooltip', (d) => {
-										const htmlTooltip = `<p class="text-name">${fieldNameAlias.groupField}: ${checkGroupAlterText(d)}</p><p>${fieldNameAlias.startField}: <span>${rangeFormat
-												? rangeFormat(d.start)
+										//get data of item and then render into html
+										const htmlTooltip = `<p class="text-name">${fieldNameAlias
+												.groupField}: ${helpers
+												.getSettings(groupOptions, 'alternativeText', d.laneName)}</p><p>${fieldNameAlias
+												.startField}: <span>${rangeFormat
+												? helpers.formatData(rangeFormat, d.start, startOptions.fieldDataType)
 												: d.start}</span></p><p>${fieldNameAlias.endField}: <span>${rangeFormat
-														? rangeFormat(d.end)
+														? helpers.formatData(rangeFormat, d.end, startOptions.fieldDataType)
 														: d.end}</span></p><p>${fieldNameAlias.labelField}: <span>${checkMetricAlterText(d)}</span></p>`;
 
 										tooltip
@@ -337,10 +319,12 @@ export default class D3VizEngine extends VizEngine {
 												.style("left", `${d3.event.pageX + 5}px`)
 												.style("top", `${d3.event.pageY + 5}px`);
 								}).on('mousemove.tooltip', () => {
+										//update tooltip's position
 										tooltip
 												.style("left", `${d3.event.pageX + 5}px`)
 												.style("top", `${d3.event.pageY + 5}px`);
 								}).on('mouseout.tooltip', () => {
+										//transition and hide tooltip
 										tooltip
 												.transition()
 												.duration(500)
