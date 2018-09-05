@@ -15,16 +15,29 @@ export default class D3VizEngine extends VizEngine {
 										items: data
 								},
 								fieldNameAlias,
-								fieldFormats,
-								range: {
-										timeBegin,
-										timeEnd
+								formats: {
+										metric: metricFormat,
+										range: rangeFormat
 								},
-								scales,
+								range: {
+										timelineBegin,
+										timelineEnd
+								},
+								scales: {
+										x,
+										x1,
+										x2,
+										y1,
+										y2
+								},
 								styles: {
 										colors,
 										isShowTooltip,
 										plotBgColor
+								},
+								fieldOptions: {
+										groupOptions,
+										metricOptions
 								}
 						} = options;
 
@@ -46,7 +59,6 @@ export default class D3VizEngine extends VizEngine {
 								mainHeight = height - miniHeight - 50,
 								space = 20; //space between mini and main charts
 
-						const {x, x1, x2, y1, y2} = scales;
 						x.range([0, width]);
 						x1.range([0, width]);
 						y1.range([0, mainHeight]);
@@ -92,12 +104,16 @@ export default class D3VizEngine extends VizEngine {
 
 						const xAxisTopCall = d3
 										.axisTop(x1)
-										.tickFormat(fieldFormats.startEndRange)
+										.tickFormat(d => rangeFormat
+												? rangeFormat(d)
+												: d)
 										.tickSize(3)
 										.ticks(8),
 								xAxisBottomCall = d3
 										.axisBottom(x)
-										.tickFormat(fieldFormats.startEndRange)
+										.tickFormat(d => rangeFormat
+												? rangeFormat(d)
+												: d)
 										.ticks(8)
 										.tickSize(3);
 
@@ -106,8 +122,18 @@ export default class D3VizEngine extends VizEngine {
 								.classed("axis bottom", true)
 								.attr("transform", `translate(${margin[3]},${height + space / 2})`)
 								.call(xAxisBottomCall)
-								.selectAll("text")
+								.selectAll(".tick text")
 								.style("text-anchor", "middle");
+
+						//add a foreign object to attach html into svg
+						let tickSizeInner = 6,
+								tickPadding = 3,
+								spacing = Math.max(tickSizeInner, 0) + tickPadding;
+						// d3 		.selectAll('.tick') 		.insert("foreignObject")
+						// 		.classed("foreign-object", true) 		.attr("width", d => {
+						// 				console.log(d); 		}) 		.attr("height", 500) 		.attr("y", spacing)
+						// 		.attr("dy", "0.71em") 		.append("xhtml:body") 		.style("font", "14px
+						// 'Helvetica Neue'") 		.html("<span>An HTML Foreign Object in SVG</span>");
 
 						svg
 								.append("g")
@@ -127,12 +153,12 @@ export default class D3VizEngine extends VizEngine {
 						svg
 								.append("text")
 								.attr("transform", "rotate(-90)")
-								.attr("y", height / 2)
+								.attr("y", "30")
 								.attr("x", -margin[3])
-								.attr("dy", "-1em")
+								//.attr("dy", "-1em")
 								.style("text-anchor", "middle")
 								.classed("chart-label", true)
-								.text('');
+								.text(`${fieldNameAlias.groupField}`);
 
 						const tooltip = d3
 								.select(chartContainer)
@@ -160,12 +186,29 @@ export default class D3VizEngine extends VizEngine {
 								.data(lanes)
 								.enter()
 								.append('text')
-								.text(d => d)
 								.attr('x', -margin[1])
 								.attr('y', (d, i) => y1(i + 0.5))
 								.attr('dy', '.5ex')
 								.attr('text-anchor', 'end')
-								.style('font', '12px sans-serif');
+								.style('font', '12px sans-serif')
+								.attr('fill', (d) => {
+										let itemInCellGroupColor = groupOptions.cellColors.value && groupOptions
+												.cellColors
+												.value
+												.find(val => val.key === d);
+										return itemInCellGroupColor
+												? itemInCellGroupColor.text
+												: '';
+								})
+								.text((d) => {
+										let itemInOption = groupOptions.alternativeText.value && groupOptions
+												.alternativeText
+												.value
+												.find(val => val.key === d);
+										return itemInOption
+												? itemInOption.text
+												: d;
+								});
 
 						//mini lanes and texts
 						mini
@@ -188,12 +231,26 @@ export default class D3VizEngine extends VizEngine {
 								.data(lanes)
 								.enter()
 								.append('text')
-								.text(d => d)
 								.attr('x', -margin[1])
 								.attr('y', (d, i) => y2(i + 0.5))
 								.attr('dy', '.5ex')
 								.attr('text-anchor', 'end')
-								.style('font', '9px sans-serif');
+								.style('font', '9px sans-serif')
+								.attr('fill', (d, i) => {
+										let itemInOption = groupOptions.cellColors.value && groupOptions
+												.cellColors
+												.value
+												.find(val => val.key === d);
+										return itemInOption
+												? itemInOption.text
+												: '';
+								})
+								.text((d) => {
+										let itemInOption = (groupOptions.alternativeText.value && groupOptions.alternativeText.value.find(val => val.key === d)) || (groupOptions.alternativeText.rangeVale && groupOptions.alternativeText.rangeVale.find(val => val.from <= d && val.to >= d));
+										return itemInOption
+												? itemInOption.text
+												: d;
+								});
 
 						const itemRects = main
 								.append('g')
@@ -210,12 +267,13 @@ export default class D3VizEngine extends VizEngine {
 								.attr('y', d => y2(d.lane + 0.5) - 5)
 								.attr('width', d => x(d.end) - x(d.start) || x(1))
 								.attr('height', 10)
-								.styles(d => ({
-										'stroke-width': 6,
-										'fill': colorScale(d.lane)
-								}));
+								.attr('stroke-width', 6)
+								.attr('fill', d => {
+										return d.fillColor
+												? d.fillColor
+												: colorScale(d.lane);
+								});
 
-						//brush
 						const brush = d3
 								.brushX()
 								.extent([
@@ -243,40 +301,51 @@ export default class D3VizEngine extends VizEngine {
 								]);
 
 						const _tooltip = function (selection) {
+								const checkMetricAlterText = (d) => {
+										const objInOption = (metricOptions.alternativeText.value && metricOptions.alternativeText.value.find(val => val.key === d.id)) || (metricOptions.alternativeText.rangeValue && metricOptions.alternativeText.rangeValue.find(val => val.from <= d.id && val.to >= d.id));
+
+										return objInOption
+												? objInOption.text
+												: (metricFormat
+														? metricFormat(d.id)
+														: d.id);
+								};
+								const checkGroupAlterText = (d) => {
+										const objInOption = groupOptions.alternativeText.value && groupOptions
+												.alternativeText
+												.value
+												.find(val => val.key === d.laneName);
+										return objInOption
+												? objInOption.text
+												: d.laneName;
+								};
 								if (!isShowTooltip) 
 										return;
-								selection
-										.on('mouseover.tooltip', function (d) {
-												const htmlTooltip = `<p class="text-name">${fieldNameAlias
-														.groupField}: ${d
-														.laneName}</p><p>${fieldNameAlias
-														.startField}: <span>${fieldFormats
-														.startEndRange(d.start)}</span></p><p>${fieldNameAlias
-														.endField}: <span>${fieldFormats
-														.startEndRange(d.end)}</span></p><p>${fieldNameAlias
-														.labelField}: <span>${d
-														.id}</span></p>`;
+								selection.on('mouseover.tooltip', (d) => {
+										const htmlTooltip = `<p class="text-name">${fieldNameAlias.groupField}: ${checkGroupAlterText(d)}</p><p>${fieldNameAlias.startField}: <span>${rangeFormat
+												? rangeFormat(d.start)
+												: d.start}</span></p><p>${fieldNameAlias.endField}: <span>${rangeFormat
+														? rangeFormat(d.end)
+														: d.end}</span></p><p>${fieldNameAlias.labelField}: <span>${checkMetricAlterText(d)}</span></p>`;
 
-												tooltip
-														.transition()
-														.duration(200)
-														.style("opacity", 0.9);
-												tooltip
-														.html(htmlTooltip)
-														.style("left", `${d3.event.pageX + 5}px`)
-														.style("top", `${d3.event.pageY + 5}px`);
-										})
-										.on('mousemove.tooltip', () => {
-												tooltip
-														.style("left", `${d3.event.pageX + 5}px`)
-														.style("top", `${d3.event.pageY + 5}px`);
-										})
-										.on('mouseout.tooltip', () => {
-												tooltip
-														.transition()
-														.duration(500)
-														.style('opacity', 0);
-										});
+										tooltip
+												.transition()
+												.duration(200)
+												.style("opacity", 0.9);
+										tooltip
+												.html(htmlTooltip)
+												.style("left", `${d3.event.pageX + 5}px`)
+												.style("top", `${d3.event.pageY + 5}px`);
+								}).on('mousemove.tooltip', () => {
+										tooltip
+												.style("left", `${d3.event.pageX + 5}px`)
+												.style("top", `${d3.event.pageY + 5}px`);
+								}).on('mouseout.tooltip', () => {
+										tooltip
+												.transition()
+												.duration(500)
+												.style('opacity', 0);
+								});
 						};
 
 						function brushed() {
@@ -324,8 +393,11 @@ export default class D3VizEngine extends VizEngine {
 										.attr('height', d => y1(1) - 6)
 										.styles(d => ({
 												'stroke-width': 6,
-												'opacity': 0.6,
-												'fill': colorScale(d.lane)
+												'fill': () => {
+														return d.fillColor
+																? d.fillColor
+																: colorScale(d.lane);
+												}
 										}))
 										.call(_tooltip);
 						}

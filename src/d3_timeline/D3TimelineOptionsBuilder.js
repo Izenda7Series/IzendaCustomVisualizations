@@ -1,14 +1,11 @@
 import {getClass} from 'IzendaSynergy';
 import * as d3 from 'd3';
-import {DATA_TYPE, DEFAULT_COLORS} from './D3TimelineHelper';
+import {DATA_TYPE, DEFAULT_COLORS} from './D3TimelineConstant';
+import {helpers} from './D3TimelineHelper';
 
 const ChartOptionsBuilder = getClass('ChartOptionsBuilder');
 
 export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
-		constructor(...args) { //@Linh: don't need to use this constructor method. because this is default for derived class.
-				super(...args);
-		}
-
 		build() {
 				//get essential informations from response's JSON.
 				const {chartData} = this;
@@ -19,6 +16,21 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 				const rangeDataType = startField.reportPartElm.properties.dataFormattings.functionInfo.dataType;
 				const lanes = [...(new Set(chartData.records.map(record => record[groupField.columnName])))] || [];
 
+				const startFieldOptions = this.fieldOptions[startField.fieldNameAlias];
+				const groupOptions = {
+						cellColors: this.fieldOptions[groupField.fieldNameAlias].cellColor,
+						alternativeText: this.fieldOptions[groupField.fieldNameAlias].alternativeText,
+						fieldDataType: this.fieldOptions[groupField.fieldNameAlias].fieldDataType,
+						fieldFormatData: this.fieldOptions[groupField.fieldNameAlias].fieldFormatData
+				};
+
+				const metricOptions = {
+						cellColors: this.fieldOptions[labelField.fieldNameAlias].cellColors,
+						alternativeText: this.fieldOptions[labelField.fieldNameAlias].alternativeText,
+						fieldDataType: this.fieldOptions[labelField.fieldNameAlias].fieldDataType,
+						fieldFormatData: this.fieldOptions[labelField.fieldNameAlias].fieldFormatData
+				};
+
 				let items = [];
 				chartData
 						.records
@@ -27,13 +39,19 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 										lane: lanes.indexOf(record[groupField.columnName]),
 										id: record[labelField.columnName],
 										start: record[startField.columnName],
-										end: record[endField.columnName]
+										end: record[endField.columnName],
+										laneName: record[groupField.columnName]
 								};
 								if (item.start && item.end) {
 										items = [
 												...items,
 												item
 										];
+								}
+								//get setting color for metric
+								let itemInCellMetricColor = ((metricOptions.cellColors.value && metricOptions.cellColors.value.find(val => val.key === item.id)) || (metricOptions.cellColors.rangeValue && metricOptions.cellColors.rangeValue.find(val => val.from <= item.id && val.to >= item.id)));
+								if (itemInCellMetricColor) {
+										item.fillColor = itemInCellMetricColor.text;
 								}
 						});
 				const parseData = (data, dataType) => {
@@ -42,8 +60,6 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 										data.forEach((item) => {
 												item.start = new Date(item.start);
 												item.end = new Date(item.end);
-												item.id = parseFloat(item.id);
-												item.laneName = lanes[item.lane];
 										});
 										break;
 
@@ -51,8 +67,6 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 										data.forEach((item) => {
 												item.start = parseFloat(item.start);
 												item.end = parseFloat(item.end);
-												item.id = parseFloat(item.id);
-												item.laneName = lanes[item.lane];
 										});
 										break;
 								default:
@@ -62,6 +76,9 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 				};
 
 				items = parseData(items, rangeDataType);
+
+				const metricFormat = helpers.getD3Format(metricOptions.fieldDataType, metricOptions.fieldFormatData);
+				const rangeFormat = helpers.getD3Format(startFieldOptions.fieldDataType, startFieldOptions.fieldFormatData);
 
 				let chartConfigs = {
 						type: this.visualType,
@@ -82,45 +99,21 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 								endField: endField.fieldNameAlias
 						},
 						range: {},
-						scales: {}
-				};
-
-				//@Linh: get format formulas - hardcode => should have a function for detecting
-				const getFieldFormats = (dataType) => {
-						let fieldFormats = {};
-						switch (dataType) {
-								case DATA_TYPE.DATE:
-										fieldFormats.startEndRange = d3.timeFormat('%m-%d-%Y');
-										fieldFormats.metric = d3.format('.2f');
-										break;
-								case DATA_TYPE.NUMBER:
-										fieldFormats.startEndRange = d3.format('.2f');
-										fieldFormats.metric = d3.format('.2f');
-										break;
-								case DATA_TYPE.MONEY:
-										fieldFormats.startEndRange = d3.format('$.2f');
-										fieldFormats.metric = d3.format('.2f');
-										break;
-								default:
-										break;
+						scales: {},
+						formats: {
+								metric: metricFormat,
+								range: rangeFormat
+						},
+						fieldOptions: {
+								groupOptions,
+								metricOptions
 						}
-						return fieldFormats;
-				};
-				const fieldFormats = getFieldFormats(rangeDataType);
-				chartConfigs.fieldFormats = fieldFormats;
-
-				//get ranges for extent
-				const getTimeRange = (data) => {
-						const startList = data.map(item => item.start),
-								endList = data.map(item => item.end);
-						const range = d3.extent(d3.merge([startList, endList]));
-						return {timeBegin: range[0], timeEnd: range[1]};
 				};
 
-				const {timeBegin, timeEnd} = getTimeRange(items);
+				const {timelineBegin, timelineEnd} = helpers.getTimelineRange(items);
 				chartConfigs.range = {
-						timeBegin,
-						timeEnd
+						timelineBegin,
+						timelineEnd
 				};
 
 				//define scales
@@ -138,20 +131,20 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 								case DATA_TYPE.DATE:
 										scales.x = d3
 												.scaleTime()
-												.domain([timeBegin, timeEnd]);
+												.domain([timelineBegin, timelineEnd]);
 										scales.x1 = d3
 												.scaleTime()
-												.domain([timeBegin, timeEnd]);
+												.domain([timelineBegin, timelineEnd]);
 										scales.x2 = d3.scaleTime();
 										break;
 
 								case DATA_TYPE.NUMBER || DATA_TYPE.MONEY:
 										scales.x = d3
 												.scaleLinear()
-												.domain([timeBegin, timeEnd]);
+												.domain([timelineBegin, timelineEnd]);
 										scales.x1 = d3
 												.scaleLinear()
-												.domain([timeBegin, timeEnd]);
+												.domain([timelineBegin, timelineEnd]);
 										scales.x2 = d3.scaleLinear();
 										break;
 
