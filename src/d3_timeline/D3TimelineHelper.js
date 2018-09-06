@@ -57,8 +57,10 @@ class D3TimelineHelper {
 								case 9: //for 0000%
 										return `${val}%`;
 								case 10: //for '% of Group'
+										return `${val}%`;
 										break;
 								case 11: // for '% of Group (with rounding)'
+										return `${val}%`;
 										break;
 								case 12: // for '1K'
 										result = d3.format(',.2f')(val / 1000);
