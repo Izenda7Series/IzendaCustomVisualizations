@@ -43,7 +43,7 @@
 .axis path, .axis line{
 	stroke: #C0D0E0;
 }
-.miniLaneText{
+.miniGroupText{
 	font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
     font-size: 11px;
     white-space: nowrap;

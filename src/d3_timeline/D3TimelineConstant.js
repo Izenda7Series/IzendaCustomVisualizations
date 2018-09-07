@@ -73,7 +73,7 @@ export const DATETIME_FORMAT = [
 		}, {
 				id: 12,
 				text: 'Month',
-				format: '%M'
+				format: '%m'
 		}, {
 				id: 13,
 				text: 'Year',

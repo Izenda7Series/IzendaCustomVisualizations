@@ -13,7 +13,7 @@ export default class D3VizEngine extends VizEngine {
 						//extract properties from chart's options
 						const {
 								data: {
-										arrLanes: lanes,
+										arrGroup: group,
 										items: data
 								},
 								fieldNameAlias,
@@ -44,37 +44,35 @@ export default class D3VizEngine extends VizEngine {
 								}
 						} = options;
 
-						const laneLength = lanes.length;
-
 						const containerWidth = chartContainer.clientWidth;
 						const containerHeight = chartContainer.clientHeight;
-
+						//create color scale
 						const colorScale = d3
 								.scaleOrdinal(colors)
-								.domain(data.map(d => d.lane));
-
+								.domain(data.map(d => d.groupId));
+						//calculate width, height
 						const margin = [
 										40, 10, 30, 140
 								],
 								width = containerWidth - margin[1] - margin[3],
 								height = containerHeight - margin[0] - margin[2],
-								miniHeight = laneLength * 8 + 20,
+								miniHeight = group.length * 8 + 20,
 								mainHeight = height - miniHeight - 50,
 								space = 20; //space between mini and main charts
-
+						//bind range for scales
 						x.range([0, width]);
 						x1.range([0, width]);
 						y1.range([0, mainHeight]);
 						y2.range([0, miniHeight]);
 						x2.range([0, width]);
-
+						//create svg container
 						const svg = d3
 								.select(chartContainer)
 								.append('svg')
 								.styles({'shape-rendering': 'crispEdges'})
 								.attr('width', width + margin[1] + margin[3])
 								.attr('height', height + margin[0] + margin[2]);
-
+						//add plot area and bind setting color
 						const plotArea = svg
 								.append('rect')
 								.attr('transform', `translate(${margin[3]},${margin[0]})`)
@@ -82,7 +80,7 @@ export default class D3VizEngine extends VizEngine {
 								.attr('height', height - margin[2])
 								.classed('plot-area', true)
 								.attr('fill', plotBgColor);
-
+						//add clippath
 						svg
 								.append('defs')
 								.append('clipPath')
@@ -90,21 +88,21 @@ export default class D3VizEngine extends VizEngine {
 								.append('rect')
 								.attr('width', width)
 								.attr('height', mainHeight);
-
+						//add main area
 						const main = svg
 								.append('g')
 								.attr('transform', 'translate(' + margin[3] + ',' + margin[0] + ')')
 								.attr('width', width)
 								.attr('height', mainHeight)
 								.classed('main', true);
-
+						//add mini area
 						const mini = svg
 								.append('g')
 								.attr('transform', `translate(${margin[3]},${ (mainHeight + margin[0] + space)})`)
 								.attr('width', width)
 								.attr('height', miniHeight)
 								.classed('mini', true);
-
+						//format axis
 						const xAxisTopCall = d3
 										.axisTop(x1)
 										.tickFormat(d => {
@@ -123,7 +121,7 @@ export default class D3VizEngine extends VizEngine {
 										})
 										.ticks(8)
 										.tickSize(3);
-
+						//add axis to svg
 						const xAxis = svg
 								.append("g")
 								.classed("axis bottom", true)
@@ -132,16 +130,6 @@ export default class D3VizEngine extends VizEngine {
 								.selectAll(".tick text")
 								.style("text-anchor", "middle");
 
-						//add a foreign object to attach html into svg
-						let tickSizeInner = 6,
-								tickPadding = 3,
-								spacing = Math.max(tickSizeInner, 0) + tickPadding;
-						// d3 		.selectAll('.tick') 		.insert("foreignObject")
-						// 		.classed("foreign-object", true) 		.attr("width", d => {
-						// 				console.log(d); 		}) 		.attr("height", 500) 		.attr("y", spacing)
-						// 		.attr("dy", "0.71em") 		.append("xhtml:body") 		.style("font", "14px
-						// 'Helvetica Neue'") 		.html("<span>An HTML Foreign Object in SVG</span>");
-
 						svg
 								.append("g")
 								.classed("axis top", true)
@@ -149,48 +137,47 @@ export default class D3VizEngine extends VizEngine {
 								.call(xAxisTopCall)
 								.selectAll("text")
 								.style("text-anchor", "middle");
-
+						//add label(start column alias - end column alias) for xAxis bottom
 						svg
 								.append("text")
 								.attr("transform", `translate( ${containerWidth / 2},${ (height + margin[0] + 20)})`)
 								.style("text-anchor", "middle")
 								.classed("chart-label", true)
 								.text(`${fieldNameAlias.startField} - ${fieldNameAlias.endField}`);
-
+						//add label(group column alias) for yAxis
 						svg
 								.append("text")
 								.attr("transform", "rotate(-90)")
 								.attr("y", "30")
 								.attr("x", -margin[3])
-								//.attr("dy", "-1em")
 								.style("text-anchor", "middle")
 								.classed("chart-label", true)
 								.text(`${fieldNameAlias.groupField}`);
-
+						//append tooltip to chart container
 						const tooltip = d3
 								.select(chartContainer)
 								.append('div')
 								.classed('tooltip', true);
 
-						//main lanes and texts
+						//main group and texts
 						main
 								.append('g')
-								.selectAll('.laneLines')
+								.selectAll('.groupLines')
 								.data(data)
 								.enter()
 								.append('line')
 								.attr('x1', margin[1] - 10)
-								.attr('y1', d => y1(d.lane))
+								.attr('y1', d => y1(d.groupId))
 								.attr('x2', width)
-								.attr('y2', d => y1(d.lane))
+								.attr('y2', d => y1(d.groupId))
 								.attr('stroke', 'lightgray');
-
+						// add label text for main area
 						svg
 								.append('g')
-								.classed('mainLaneTexts', true)
+								.classed('mainGroupTexts', true)
 								.attr('transform', 'translate(' + margin[3] + ',' + margin[0] + ')')
-								.selectAll('.laneText')
-								.data(lanes)
+								.selectAll('.groupText')
+								.data(group)
 								.enter()
 								.append('text')
 								.attr('x', -margin[1])
@@ -198,32 +185,28 @@ export default class D3VizEngine extends VizEngine {
 								.attr('dy', '.5ex')
 								.attr('text-anchor', 'end')
 								.style('font', '12px sans-serif')
-								.attr('fill', (d) => {
-										return helpers.getSettings(groupOptions, 'cellColors', d.laneName);
-								})
-								.text((d) => {
-										return helpers.getSettings(groupOptions, 'alternativeText', d.laneName);
-								});
+								.attr('fill', d => d.textColor)
+								.text(d => d.alternativeText);
 
-						//mini lanes and texts
+						//mini group and texts
 						mini
 								.append('g')
-								.selectAll('.laneLines')
+								.selectAll('.groupLines')
 								.data(data)
 								.enter()
 								.append('line')
 								.attr('x1', margin[1] - 10)
-								.attr('y1', d => y2(d.lane))
+								.attr('y1', d => y2(d.groupId))
 								.attr('x2', width)
-								.attr('y2', d => y2(d.lane))
+								.attr('y2', d => y2(d.groupId))
 								.attr('stroke', 'lightgray');
-
+						//add label for mini group
 						svg
 								.append('g')
 								.attr('transform', `translate(${margin[3]},${ (mainHeight + margin[0] + space)})`)
-								.classed('miniLaneTexts', true)
-								.selectAll('.laneText')
-								.data(lanes)
+								.classed('miniGroupTexts', true)
+								.selectAll('.groupText')
+								.data(group)
 								.enter()
 								.append('text')
 								.attr('x', -margin[1])
@@ -231,12 +214,9 @@ export default class D3VizEngine extends VizEngine {
 								.attr('dy', '.5ex')
 								.attr('text-anchor', 'end')
 								.style('font', '9px sans-serif')
-								.attr('fill', (d) => {
-										return helpers.getSettings(groupOptions, 'cellColors', d.laneName);
-								})
-								.text((d) => {
-										return helpers.getSettings(groupOptions, 'alternativeText', d.laneName);
-								});
+								.attr('fill', d => d.textColor)
+								.text(d => d.alternativeText);
+
 						//draw rect for main area
 						const itemRects = main
 								.append('g')
@@ -250,14 +230,14 @@ export default class D3VizEngine extends VizEngine {
 								.enter()
 								.append('rect')
 								.attr('x', d => x(d.start))
-								.attr('y', d => y2(d.lane + 0.5) - 5)
+								.attr('y', d => y2(d.groupId + 0.5) - 5)
 								.attr('width', d => x(d.end) - x(d.start) || x(1))
 								.attr('height', 10)
 								.attr('stroke-width', 6)
 								.attr('fill', d => {
 										return d.fillColor
 												? d.fillColor
-												: colorScale(d.lane);
+												: colorScale(d.groupId);
 								});
 						//define brush with extent [[0, 0][width, miniHeight]]
 						const brush = d3
@@ -289,26 +269,26 @@ export default class D3VizEngine extends VizEngine {
 						//timeline tooltip
 						const _tooltip = function (selection) {
 								const checkMetricAlterText = (d) => {
-										const objInOption = (metricOptions.alternativeText.value && metricOptions.alternativeText.value.find(val => val.key === d.id)) || (metricOptions.alternativeText.rangeValue && metricOptions.alternativeText.rangeValue.find(val => val.from <= d.id && val.to >= d.id));
-
-										return objInOption
-												? objInOption.text
+										const alterText = helpers.getSettings(metricOptions, 'alternativeText', d.value, d.percentage);
+										return alterText !== d.value
+												? alterText
 												: (metricFormat
-														? helpers.formatData(metricFormat, d.id, metricOptions.fieldDataType)
-														: d.id);
+														? helpers.formatData(metricFormat, d.value, metricOptions.fieldDataType)
+														: d.value);
 								};
+
 								if (!isShowTooltip) 
 										return;
 								selection.on('mouseover.tooltip', (d) => {
 										//get data of item and then render into html
 										const htmlTooltip = `<p class="text-name">${fieldNameAlias
 												.groupField}: ${helpers
-												.getSettings(groupOptions, 'alternativeText', d.laneName)}</p><p>${fieldNameAlias
+												.getSettings(groupOptions, 'alternativeText', d.groupName, d.percentage)}</p><p>${fieldNameAlias
 												.startField}: <span>${rangeFormat
 												? helpers.formatData(rangeFormat, d.start, startOptions.fieldDataType)
 												: d.start}</span></p><p>${fieldNameAlias.endField}: <span>${rangeFormat
 														? helpers.formatData(rangeFormat, d.end, startOptions.fieldDataType)
-														: d.end}</span></p><p>${fieldNameAlias.labelField}: <span>${checkMetricAlterText(d)}</span></p>`;
+														: d.end}</span></p><p>${fieldNameAlias.groupField}: <span>${checkMetricAlterText(d)}</span></p>`;
 
 										tooltip
 												.transition()
@@ -358,7 +338,7 @@ export default class D3VizEngine extends VizEngine {
 								// select all main rects and bind data to them
 								let rects = itemRects
 										.selectAll('rect')
-										.data(visItems, d => d.id);
+										.data(visItems, d => d.value);
 
 								//remove surplus rects
 								rects
@@ -372,7 +352,7 @@ export default class D3VizEngine extends VizEngine {
 										.append('rect')
 										.merge(rects)
 										.attr('x', d => x1(d.start))
-										.attr('y', d => y1(d.lane) + 3)
+										.attr('y', d => y1(d.groupId) + 3)
 										.attr('width', d => x1(d.end) - x1(d.start) || 0)
 										.attr('height', d => y1(1) - 6)
 										.styles(d => ({
@@ -380,7 +360,7 @@ export default class D3VizEngine extends VizEngine {
 												'fill': () => {
 														return d.fillColor
 																? d.fillColor
-																: colorScale(d.lane);
+																: colorScale(d.groupId);
 												}
 										}))
 										.call(_tooltip);

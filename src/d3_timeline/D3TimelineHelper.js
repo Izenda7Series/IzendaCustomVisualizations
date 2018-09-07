@@ -100,13 +100,14 @@ class D3TimelineHelper {
 		}
 
 		// this function is using to get colors/ alternative texts from settings
-		getSettings(options, prop, value) {
-				let itemInOption = (options[prop].value && options[prop].value.find(val => val.key == value)) || (options[prop].rangeValue && options[prop].rangeValue.find(val => val.from <= value && val.to >= value));
+		getSettings(options, prop, value, percentage = null) {
+				let itemInOption = (options[prop].value && options[prop].value.find(val => val.key == value)) || (options[prop].rangeValue && options[prop].rangeValue.find(val => val.from <= value && val.to >= value)) || (options[prop].rangePercent && options[prop].rangePercent.find(val => val.from <= percentage && val.to >= percentage));
 				return itemInOption
 						? itemInOption.text
-						: value;
+						: (prop === 'cellColors'
+								? ''
+								: value);
 		}
-
 }
 
 export const helpers = new D3TimelineHelper();
