@@ -9,6 +9,7 @@ import './3d_column';
 import './3d_scatter';
 import './columnnospace';
 import './d3_timeline';
+import './d3_googlemap';
 
 // Init the configuration of Izenda
 IzendaSynergy.config(config);

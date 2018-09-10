@@ -2,6 +2,8 @@ import * as d3 from 'd3';
 
 import {DATA_TYPE, DATETIME_FORMAT, NUMERIC_FORMAT} from './D3TimelineConstant';
 
+// This class is using for formatting data, calculate something. This class can
+// be inherited by other charts.
 class D3TimelineHelper {
 		getD3Format(dataType, formatString) {
 				// if (!formatString) 		return;
