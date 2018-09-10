@@ -8,31 +8,36 @@ import {GoogleApi} from './google_api_loader/GoogleApi';
 const VizEngine = getClass('VizEngine');
 
 export default class D3GoogleMapVizEngine extends VizEngine {
-		initialize() {
-				// Avoid race condition: remove previous 'load' listener
+		draw(chartContainer, chartType, options, onCompleted) {
+				if (chartType === 'googlemap') {
+						if (!window.google) {
+								this.initialize();
+						}
+						return this.drawGoogleMap(chartContainer);
+				}
+		}
+
+		async initialize() {
 				if (this.unregisterLoadHandler) {
 						this.unregisterLoadHandler();
 						this.unregisterLoadHandler = null;
-				} //build script and attact to
-				window.this.scriptCache = defaultCreateCache();
-				this.unregisterLoadHandler = this
+				}
+
+				const defaultCreateCache = () => {
+						return ScriptCache({
+								google: GoogleApi({apiKey: 'AIzaSyD9g2hw8FZBgdB0nnSq1eLHlxq3I5jibYU'})
+						});
+				};
+
+				this.scriptCache = defaultCreateCache();
+				this.unregisterLoadHandler = await this
 						.scriptCache
 						.google
 						.onLoad(this.onLoad.bind(this));
 		}
+
 		onLoad(err, tag) {
 				this._gapi = window.google;
-		}
-
-		async draw(chartContainer, chartType, options, onCompleted) {
-				if (chartType === 'googlemap') {
-						if (!window.google) {
-								await
-								this.initialize();
-								return this.drawGoogleMap(chartContainer);
-						}
-						return this.drawGoogleMap(chartContainer);
-				}
 		}
 
 		drawGoogleMap(chartContainer, options) {
@@ -47,6 +52,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 								value: 4
 						}
 				];
+
 				let map;
 				if (navigator.geolocation) {
 						navigator
@@ -69,6 +75,13 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 												let marker = new google
 														.maps
 														.Marker({position: latLng, map: map});
+												let infowindow = new google
+														.maps
+														.InfoWindow({content: `Lat: ${item.lat}, Lng: ${item.lng}`});
+
+												marker.addListener('click', function () {
+														infowindow.open(map, marker);
+												});
 										});
 								})
 				}
