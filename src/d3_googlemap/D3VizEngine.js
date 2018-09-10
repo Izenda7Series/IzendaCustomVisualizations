@@ -25,7 +25,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 
 				const defaultCreateCache = () => {
 						return ScriptCache({
-								google: GoogleApi({apiKey: 'AIzaSyD9g2hw8FZBgdB0nnSq1eLHlxq3I5jibYU'})
+								google: GoogleApi({apiKey: 'API_KEY'})
 						});
 				};
 
