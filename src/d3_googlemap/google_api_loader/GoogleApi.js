@@ -7,7 +7,6 @@ export const GoogleApi = function (opts) {
 
 		const apiKey = opts.apiKey;
 		const URL = opts.url || 'https://maps.googleapis.com/maps/api/js';
-		const callback = opts.callback;
 
 		const url = () => {
 				let url = URL;
