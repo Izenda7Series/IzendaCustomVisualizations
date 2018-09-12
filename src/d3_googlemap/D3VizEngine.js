@@ -9,7 +9,7 @@ const VizEngine = getClass('VizEngine');
 
 const defaultCreateCache = () => {
 		return ScriptCache({
-				google: GoogleApi({apiKey: 'API_KEY'})
+				google: GoogleApi({apiKey: 'AIzaSyCztGOnG7cbR5FUZtAN-CEuHnzWS08wLec'})
 		});
 };
 
