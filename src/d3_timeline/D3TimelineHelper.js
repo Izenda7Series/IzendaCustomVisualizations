@@ -106,7 +106,7 @@ class D3TimelineHelper {
 				let itemInOption = (options[prop].value && options[prop].value.find(val => val.key == value)) || (options[prop].rangeValue && options[prop].rangeValue.find(val => val.from <= value && val.to >= value)) || (options[prop].rangePercent && options[prop].rangePercent.find(val => val.from <= percentage && val.to >= percentage));
 				return itemInOption
 						? itemInOption.text
-						: (prop === 'cellColors'
+						: (prop === 'cellColors' || prop === 'latitude'
 								? ''
 								: value);
 		}

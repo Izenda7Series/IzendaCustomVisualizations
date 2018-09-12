@@ -36,7 +36,7 @@ export default class EnhancedReportPartMapContent extends ReportPartMapContent {
 		get isBeingBuild() {
 				switch (this.chartType) {
 						case 'GoogleMap':
-								return (hasElement(this['country']) && hasAllFunctions(this['state']) && hasAllFunctions(this['county']) && hasAllFunctions(this['city']) && hasAllFunctions(this['postalCode']) && hasAllFunctions(this['latitude']) && hasAllFunctions(this['longitude']) && hasAllFunctions(this['bubble_metric']));
+								return (hasElement(this['country']) || hasAllFunctions(this['state']) || hasAllFunctions(this['county']) || hasAllFunctions(this['city']) || hasAllFunctions(this['postalCode']) || (hasAllFunctions(this['latitude']) && hasAllFunctions(this['longtitude']))) && hasAllFunctions(this['bubbleMetrics']);
 						default:
 								return super.isBeingBuild;
 				}

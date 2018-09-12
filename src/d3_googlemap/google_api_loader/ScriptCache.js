@@ -5,7 +5,7 @@ const window = (typeof self === 'object' && self.self === self && self) || (type
 export const ScriptCache = (function (global) {
 		global._scriptMap = global._scriptMap || scriptMap;
 		return function ScriptCache(scripts) {
-				const Cache = {}
+				const Cache = {};
 
 				Cache._onLoad = function (key) {
 						return (cb) => {
@@ -24,7 +24,7 @@ export const ScriptCache = (function (global) {
 														if (registered) {
 																stored.error
 																		? cb(stored.error)
-																		: cb(null, stored)
+																		: cb(null, stored);
 														}
 
 														return stored;
@@ -32,8 +32,8 @@ export const ScriptCache = (function (global) {
 								}
 
 								return unregister;
-						}
-				}
+						};
+				};
 
 				Cache._scriptTag = (key, src) => {
 						if (!scriptMap.has(key)) {
@@ -57,30 +57,30 @@ export const ScriptCache = (function (global) {
 																resolve(src);
 														} else if (state === 'error') {
 																stored.errored = true;
-																reject(evt)
+																reject(evt);
 														}
 														stored.loaded = true;
 
 														cleanup();
-												}
-										}
+												};
+										};
 
 										const cleanup = () => {
 												if (global[cbName] && typeof global[cbName] === 'function') {
 														global[cbName] = null;
-														delete global[cbName]
+														delete global[cbName];
 												}
-										}
+										};
 
 										tag.onload = handleResult('loaded');
-										tag.onerror = handleResult('error')
+										tag.onerror = handleResult('error');
 										tag.onreadystatechange = () => {
-												handleResult(tag.readyState)
-										}
+												handleResult(tag.readyState);
+										};
 
 										// Pick off callback, if there is one
 										if (src.match(/callback=CALLBACK_NAME/)) {
-												src = src.replace(/(callback=)[^\&]+/, `$1${cbName}`)
+												src = src.replace(/(callback=)[^\&]+/, `$1${cbName}`);
 												cb = window[cbName] = tag.onload;
 										} else {
 												tag.addEventListener('load', tag.onload)

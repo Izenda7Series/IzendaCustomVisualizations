@@ -34,8 +34,8 @@ extendReportPartStyleConfiguration(REPORT_PART_TYPES.Map, 'GoogleMap', null, {
 				createFieldContainerSchema('City', 'City', 'city', null, 1),
 				createFieldContainerSchema('Postal Code', 'Postal Code', 'postalCode', null, 1),
 				createFieldContainerSchema('Latitude', 'Latitude', 'latitude', null, 1),
-				createFieldContainerSchema('Longitude', 'Longitude', 'longitude', null, 1),
-				createFieldContainerSchema('Bubble Metric', 'Bubble Metric', 'bubble_metric', null, 1)
+				createFieldContainerSchema('Longitude', 'Longtitude', 'longtitude', null, 1),
+				createFieldContainerSchema('Bubble Metric', 'Bubble Metric', 'bubbleMetrics', null, 1, true)
 		],
 
 		/**
