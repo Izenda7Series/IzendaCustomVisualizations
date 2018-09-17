@@ -1,4 +1,4 @@
-export const GoogleApi = function (opts) {
+export const GoogleApi = (opts) => {
 		opts = opts || {};
 
 		if (!opts.hasOwnProperty('apiKey')) {

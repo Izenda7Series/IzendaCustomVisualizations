@@ -1,7 +1,7 @@
 import {getClass} from 'IzendaSynergy';
 import * as d3 from 'd3';
-import {DATA_TYPE, DEFAULT_COLORS} from './D3TimelineConstant';
-import {helpers} from './D3TimelineHelper';
+import {DATA_TYPE, DEFAULT_COLORS} from './../utils/D3TimelineConstant';
+import {helpers} from './../utils/D3TimelineHelper';
 
 const ChartOptionsBuilder = getClass('ChartOptionsBuilder');
 

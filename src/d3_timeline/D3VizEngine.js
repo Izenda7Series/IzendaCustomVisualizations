@@ -2,7 +2,7 @@ import {getClass} from 'IzendaSynergy';
 import * as d3 from 'd3';
 import 'd3-selection-multi';
 import './styles.css';
-import {helpers} from './D3TimelineHelper';
+import {helpers} from './../utils/D3TimelineHelper';
 
 const VizEngine = getClass('VizEngine');
 

@@ -7,8 +7,8 @@ export const ScriptCache = (function (global) {
 		return function ScriptCache(scripts) {
 				const Cache = {};
 
-				Cache._onLoad = function (key) {
-						return (cb) => {
+				Cache._onLoad = (key) => {
+						return (callback) => {
 								let registered = true;
 
 								function unregister() {
@@ -23,8 +23,8 @@ export const ScriptCache = (function (global) {
 												.then(() => {
 														if (registered) {
 																stored.error
-																		? cb(stored.error)
-																		: cb(null, stored);
+																		? callback(stored.error)
+																		: callback(null, stored);
 														}
 
 														return stored;
@@ -42,7 +42,7 @@ export const ScriptCache = (function (global) {
 								
 								let tag = document.createElement('script');
 								let promise = new Promise((resolve, reject) => {
-										let body = document.getElementsByTagName('body')[0];
+										let body = document.querySelector('body');
 
 										tag.type = 'text/javascript';
 										tag.async = false;
@@ -81,9 +81,9 @@ export const ScriptCache = (function (global) {
 										// Pick off callback, if there is one
 										if (src.match(/callback=CALLBACK_NAME/)) {
 												src = src.replace(/(callback=)[^\&]+/, `$1${cbName}`);
-												cb = window[cbName] = tag.onload;
+												callback = window[cbName] = tag.onload;
 										} else {
-												tag.addEventListener('load', tag.onload)
+												tag.addEventListener('load', tag.onload);
 										}
 										tag.addEventListener('error', tag.onerror);
 
@@ -97,11 +97,11 @@ export const ScriptCache = (function (global) {
 										error: false,
 										promise: promise,
 										tag
-								}
+								};
 								scriptMap.set(key, initialState);
 						}
 						return scriptMap.get(key);
-				}
+				};
 
 				Object
 						.keys(scripts)
@@ -120,11 +120,11 @@ export const ScriptCache = (function (global) {
 								Cache[key] = {
 										tag: tag,
 										onLoad: Cache._onLoad(key)
-								}
-						})
+								};
+						});
 
 				return Cache;
-		}
+		};
 })(window);
 
 export default ScriptCache;
