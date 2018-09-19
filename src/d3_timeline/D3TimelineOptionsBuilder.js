@@ -94,7 +94,7 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 						},
 						styles: {
 								colors: this.chartOptions.colors || DEFAULT_COLORS,
-								isShowTooltip: this.chartOptions.commonOptions.plotOptions.series.states.hover.enabled || true,
+								isShowTooltip: this.chartOptions.commonOptions.plotOptions.series.states.hover.enabled,
 								plotBgColor: this.chartOptions.commonOptions.chart.plotBackgroundColor || 'none'
 						},
 						fieldNameAlias: {
