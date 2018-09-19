@@ -1,17 +1,8 @@
 import {getClass} from 'IzendaSynergy';
-import * as d3 from 'd3';
-import './assets/styles.css';
-//import google map api helpers
+
+import {GOOGLEMAP_FIELD_MAPPING} from './../utils/CustomVizConstant';
 import {ScriptCache} from './google_api_loader/ScriptCache';
 import {GoogleApi} from './google_api_loader/GoogleApi';
-
-//this const will be replaced to common
-const FIELD_MAPPING = {
-		COUNTRY: 'country',
-		POSTAL_CODE: 'postalCode',
-		LATITUDE: 'latitude',
-		LONGTITUDE: 'longtitude'
-};
 
 const VizEngine = getClass('VizEngine');
 
@@ -29,6 +20,10 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 				this.scriptCache = this.scriptCache
 						? this.scriptCache
 						: defaultCreateCache();
+				//
+				window._geoCache = window._geoCache
+						? window._geoCache
+						: new Map();
 		}
 
 		draw(chartContainer, chartType, options, onCompleted) {
@@ -36,12 +31,12 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 				//detect type of received data : lat/lng or postcode/address
 
 				const drawGoogleMap = (chartContainer, options) => {
-						const {data, fieldAlias, type} = options;
+						const {data, fieldAlias, type, isShowTooltip} = options;
 
-						if (type === FIELD_MAPPING.COUNTRY || type === FIELD_MAPPING.POSTAL_CODE) {
-								return this.drawMapByPostcode(chartContainer, data, fieldAlias, type);
+						if (type.id === GOOGLEMAP_FIELD_MAPPING.COUNTRY.id || type.id === GOOGLEMAP_FIELD_MAPPING.POSTAL_CODE.id) {
+								return this.drawMapByGetGeoCode(chartContainer, data, fieldAlias, type, isShowTooltip);
 						} else {
-								return this.drawMapByLatLngs(chartContainer, data, fieldAlias);
+								return this.drawMapByLatLngs(chartContainer, data, fieldAlias, isShowTooltip);
 						}
 				};
 
@@ -61,7 +56,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 				}
 		}
 
-		drawMapByLatLngs(chartContainer, data, fieldAlias) {
+		drawMapByLatLngs(chartContainer, data, fieldAlias, isShowTooltip) {
 				const {map, bounds} = this.initialMap(chartContainer, data);
 
 				data.forEach(item => {
@@ -82,18 +77,19 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 						//extend bounds
 						bounds.extend(latLng);
 
-						//define an infor window (tooltip)
-						const inforHTML = `<p>Lat: ${item.lat}</p><p>Lng : ${item.lng}</p><p>${fieldAlias.metric}: ${item.metricText}</p>`;
+						if (isShowTooltip) {
+								//define an infor window (tooltip)
+								const inforHTML = `<p>Lat: ${item.lat}</p><p>Lng : ${item.lng}</p><p>${fieldAlias.metric}: ${item.metricText}</p>`;
 
-						let infowindow = new google
-								.maps
-								.InfoWindow({content: inforHTML});
+								let infowindow = new google
+										.maps
+										.InfoWindow({content: inforHTML});
 
-						//add event for displaying tooltip
-						marker.addListener('click', function () {
-								infowindow.open(map, marker);
-						});
-						// marker.addListener('mouseout', function () { 		infowindow.close(); });
+								//add event for displaying tooltip
+								marker.addListener('click', function () {
+										infowindow.open(map, marker);
+								});
+						}
 				});
 
 				//center map
@@ -103,7 +99,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 				}
 		}
 
-		drawMapByPostcode(chartContainer, data, fieldAlias, type) {
+		drawMapByGetGeoCode(chartContainer, data, fieldAlias, type, isShowTooltip) {
 				const {map, bounds} = this.initialMap(chartContainer, data);
 
 				//google.maps.Geocoder constructor object
@@ -112,64 +108,111 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 						.Geocoder();
 
 				//Promise to get lat/lng by postcode
-				const getGeoCode = (value) => {
-						return new Promise((resolve, reject) => {
-								const params = (type === FIELD_MAPPING.POSTAL_CODE)
-										? {
-												postalCode: value
-										}
-										: {
-												country: value
+				const getGeoCode = (item) => {
+						let val,
+								params;
+						if (type.id === GOOGLEMAP_FIELD_MAPPING.COUNTRY.id) {
+								val = item.country;
+								params = {
+										'country': val
+								};
+						} else {
+								if (item.country) {
+										val = `${item.country},${item.postcode}`;
+										params = {
+												'country': item.country,
+												'postalCode': item.postcode
 										};
-								geoCoder.geocode({
-										componentRestrictions: params
-								}, (results, status) => {
-										if (status === 'OK') {
-												resolve(results);
-										} else {
-												reject(status);
-										}
-								});
+								} else {
+										val = item.postcode;
+										params = {
+												'postalCode': val
+										};
+								}
+						}
+
+						return new Promise((resolve, reject) => {
+								if (window._geoCache.has(val)) {
+										resolve(window._geoCache.get(val));
+								} else {
+										geoCoder.geocode({
+												address: val
+										}, (result, status) => {
+												if (status === google.maps.GeocoderStatus.OK) {
+														window
+																._geoCache
+																.set(val, result);
+														resolve(result);
+												} else {
+														if (status == google.maps.GeocoderStatus.OVER_QUERY_LIMIT) {
+																setTimeout(function () {
+																		getGeoCode(item);
+																}, 2000);
+														} else {
+																reject(status);
+														}
+												}
+										});
+								}
 						});
 				};
 
 				//render marker by data
 				data.forEach((item, index) => {
-						getGeoCode(item.address).then((result) => {
-								if (result[0]) {
-										//define marker
-										let marker = new google
-												.maps
-												.Marker({
-														position: result[0].geometry.location,
-														map: map,
-														icon: this.getPinStyle(item)
-												});
+						const renderItem = (item) => {
+								getGeoCode(item).then((result) => {
+										if (result[0]) {
+												//define marker
+												let marker = new google
+														.maps
+														.Marker({
+																position: result[0].geometry.location,
+																map: map,
+																icon: this.getPinStyle(item)
+														});
 
-										//extend bounds
-										bounds.extend(result[0].geometry.location);
+												//extend bounds
+												bounds.extend(result[0].geometry.location);
 
-										//define an infor window (tooltip)
-										const inforHTML = `<p>${fieldAlias.geo}: ${item.address}</p><p>${fieldAlias.metric}: ${item.metricText}</p>`;
+												if (isShowTooltip) {
+														//define an infor window (tooltip)
+														const buildHTMLContent = () => {
+																let strResult = '';
+																if (type.id === GOOGLEMAP_FIELD_MAPPING.COUNTRY.id) {
+																		strResult = `<p>${fieldAlias.geo}: ${item.country}</p>`;
+																} else {
+																		if (item.country) {
+																				strResult = `<p>${fieldAlias.geo}: ${item.country}, ${item.postcode}</p>`;
+																		} else {
+																				strResult = `<p>${fieldAlias.geo}: ${item.postcode}</p>`;
+																		}
+																}
+																return strResult += `<p>${fieldAlias.metric}: ${item.metricText}</p>`;
+														};
 
-										let infowindow = new google
-												.maps
-												.InfoWindow({content: inforHTML});
+														let infowindow = new google
+																.maps
+																.InfoWindow({content: buildHTMLContent()});
 
-										//add event for displaying tooltip
-										marker.addListener('click', function () {
-												infowindow.open(map, marker);
-										});
+														//add event for displaying tooltip
+														marker.addListener('click', function () {
+																infowindow.open(map, marker);
+														});
+												}
 
-										//if this is the last item => add center map
-										if (item.id === data.length - 1) {
-												map.fitBounds(bounds);
-												map.panToBounds(bounds);
+												//if this is the last item => add center map
+												if (item.id === data.length - 1) {
+														map.fitBounds(bounds);
+														map.panToBounds(bounds);
+												}
 										}
-								}
-						}).catch(error => {
-								console.log(error);
-						});
+
+								}).catch(error => {
+										console.log(error);
+								});
+						};
+
+						renderItem(item);
 				});
 		}
 

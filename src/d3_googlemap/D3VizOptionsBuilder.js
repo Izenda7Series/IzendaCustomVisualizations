@@ -1,15 +1,8 @@
 import {getClass} from 'IzendaSynergy';
-import {helpers} from './../utils/D3TimelineHelper';
+import {helpers} from '../utils/CustomVizHelper';
+import {GOOGLEMAP_GOOGLEMAP_FIELD_MAPPING} from './../utils/CustomVizConstant';
 
 const ChartOptionsBuilder = getClass('ChartOptionsBuilder');
-
-//this const will be replaced to common
-const FIELD_MAPPING = {
-		COUNTRY: 'country',
-		POSTAL_CODE: 'postalCode',
-		LATITUDE: 'latitude',
-		LONGTITUDE: 'longtitude'
-};
 
 export default class D3GoogleMapOptionsBuilder extends ChartOptionsBuilder {
 
@@ -18,21 +11,25 @@ export default class D3GoogleMapOptionsBuilder extends ChartOptionsBuilder {
 				if (Array.isArray(chartData) && chartData.length === 0) 
 						return {data: []};
 				
+				// There are some kind of types of mapping: 1.[C1: lat/lng/metric] 2.[C2:
+				// country/metric] 3.[C3: postcode/metric] 4.[C4: country/postcode/metric]
+
 				if (chartData.dataStructure.country) {
-						return this.buildOptionByPostcode(this, FIELD_MAPPING.COUNTRY);
+						return this.buildOptionByCountry(this);
 				} else if (chartData.dataStructure.postalCode) {
-						return this.buildOptionByPostcode(this, FIELD_MAPPING.POSTAL_CODE);
+						if (chartData.fieldsMapping.length === 3) { //has country
+								return this.buildOptionByPostcode(this, true);
+						}
+						return this.buildOptionByPostcode(this);
 				} else if (chartData.dataStructure.latitude && chartData.dataStructure.longtitude) {
 						return this.buildOptionByLatLng(this);
 				}
-
 		}
 
 		buildOptionByLatLng({chartData, fieldOptions}) {
 				const latField = chartData.dataStructure.latitude[0];
 				const longField = chartData.dataStructure.longtitude[0];
 				const bbMetricField = chartData.dataStructure.bubbleMetrics[0];
-
 				const bbMetricFieldOptions = fieldOptions[bbMetricField.fieldNameAlias];
 
 				//extract metric options
@@ -52,18 +49,14 @@ export default class D3GoogleMapOptionsBuilder extends ChartOptionsBuilder {
 								const percentValue = record[`percentage_${bbMetricField.columnName}`]
 										? record[`percentage_${bbMetricField.columnName}`]
 										: null;
-
 								if (lat && lng && value > 0) {
-
 										const color = (bbMetricFieldOptions.cellColors.latitude && helpers.getSettings(bbMetricFieldOptions.cellColors, 'latitude', value, percentValue)) || null;
-
 										const metricAlterText = helpers.getSettings(bbMetricFieldOptions, 'alternativeText', value, percentValue);
 										const metricText = metricAlterText !== value
 												? metricAlterText
 												: (!bbMetricOptions.fnFormat
 														? value
 														: helpers.formatData(bbMetricOptions.fnFormat, value, bbMetricOptions.dataType));
-
 										const item = {
 												id: data.length,
 												lat,
@@ -81,7 +74,6 @@ export default class D3GoogleMapOptionsBuilder extends ChartOptionsBuilder {
 								}
 
 						});
-
 				let chartOptions = {
 						data,
 						fieldAlias: {
@@ -90,7 +82,8 @@ export default class D3GoogleMapOptionsBuilder extends ChartOptionsBuilder {
 								metric: bbMetricField.fieldNameAlias
 						},
 						bbMetricOptions,
-						type: 2 //lat/lng
+						isShowTooltip: this.chartOptions.optionByType.izShowTooltip,
+						type: GOOGLEMAP_GOOGLEMAP_FIELD_MAPPING.LAT_LNG
 				};
 
 				return chartOptions;
@@ -99,10 +92,10 @@ export default class D3GoogleMapOptionsBuilder extends ChartOptionsBuilder {
 		buildOptionByPostcode({
 				chartData,
 				fieldOptions
-		}, fieldMapping) {
-				const geoField = chartData.dataStructure[fieldMapping][0];
-				const bbMetricField = chartData.dataStructure.bubbleMetrics[0];
+		}, hasCountry = false) {
 
+				const postCodeField = chartData.dataStructure.postalCode[0];
+				const bbMetricField = chartData.dataStructure.bubbleMetrics[0];
 				const bbMetricFieldOptions = fieldOptions[bbMetricField.fieldNameAlias];
 
 				//extract metric options
@@ -111,31 +104,37 @@ export default class D3GoogleMapOptionsBuilder extends ChartOptionsBuilder {
 						fnFormat: helpers.getD3Format(bbMetricFieldOptions.fieldDataType, bbMetricFieldOptions.fieldFormatData)
 				};
 
-				//extract data from chartData
+				/* check if it also has country field for combination address */
+				const countryField = hasCountry
+						? chartData
+								.fieldsMapping
+								.filter(field => field.fieldId !== postCodeField.fieldId && field.fieldId !== bbMetricField.fieldId)[0]
+						: null;
+				// extract data from chartData
 				let data = [];
 				chartData
 						.records
 						.forEach((record, index) => {
-								const address = record[geoField.columnName];
+								const postcode = record[postCodeField.columnName];
+								const country = countryField
+										? record[countryField.columnName]
+										: null;
 								const value = record[bbMetricField.columnName];
 								const percentValue = record[`percentage_${bbMetricField.columnName}`]
 										? record[`percentage_${bbMetricField.columnName}`]
 										: null;
-
-								if (address && value > 0) {
-
-										const color = (bbMetricFieldOptions.cellColors[fieldMapping] && helpers.getSettings(bbMetricFieldOptions.cellColors, 'latitude', value, percentValue)) || null;
-
+								if (postcode && value > 0) {
+										const color = (bbMetricFieldOptions.cellColors.postalCode && helpers.getSettings(bbMetricFieldOptions.cellColors, 'postalCode', value, percentValue)) || null;
 										const metricAlterText = helpers.getSettings(bbMetricFieldOptions, 'alternativeText', value, percentValue);
 										const metricText = metricAlterText !== value
 												? metricAlterText
 												: (!bbMetricOptions.fnFormat
 														? value
 														: helpers.formatData(bbMetricOptions.fnFormat, value, bbMetricOptions.dataType));
-
 										const item = {
 												id: data.length,
-												address,
+												postcode,
+												country,
 												value,
 												color,
 												metricText,
@@ -149,15 +148,75 @@ export default class D3GoogleMapOptionsBuilder extends ChartOptionsBuilder {
 								}
 
 						});
-
 				let chartOptions = {
 						data,
 						fieldAlias: {
-								geo: geoField.fieldNameAlias,
+								geo: postCodeField.fieldNameAlias,
+								metric: bbMetricField.fieldNameAlias
+						},
+						isShowTooltip: this.chartOptions.optionByType.izShowTooltip,
+						bbMetricOptions,
+						type: GOOGLEMAP_GOOGLEMAP_FIELD_MAPPING.POSTAL_CODE
+				};
+
+				return chartOptions;
+		}
+
+		buildOptionByCountry({chartData, fieldOptions}) {
+
+				const countryField = chartData.dataStructure.country[0];
+				const bbMetricField = chartData.dataStructure.bubbleMetrics[0];
+				const bbMetricFieldOptions = fieldOptions[bbMetricField.fieldNameAlias];
+
+				//extract metric options
+				const bbMetricOptions = {
+						dataType: bbMetricFieldOptions.fieldDataType,
+						fnFormat: helpers.getD3Format(bbMetricFieldOptions.fieldDataType, bbMetricFieldOptions.fieldFormatData)
+				};
+
+				//extract data from chartData
+				let data = [];
+				chartData
+						.records
+						.forEach((record, index) => {
+								const country = record[countryField.columnName];
+								const value = record[bbMetricField.columnName];
+								const percentValue = record[`percentage_${bbMetricField.columnName}`]
+										? record[`percentage_${bbMetricField.columnName}`]
+										: null;
+								if (country && value > 0) {
+										const color = (bbMetricFieldOptions.cellColors.country && helpers.getSettings(bbMetricFieldOptions.cellColors, 'country', value, percentValue)) || null;
+										const metricAlterText = helpers.getSettings(bbMetricFieldOptions, 'alternativeText', value, percentValue);
+										const metricText = metricAlterText !== value
+												? metricAlterText
+												: (!bbMetricOptions.fnFormat
+														? value
+														: helpers.formatData(bbMetricOptions.fnFormat, value, bbMetricOptions.dataType));
+										const item = {
+												id: data.length,
+												country,
+												value,
+												color,
+												metricText,
+												percentValue
+										};
+
+										data = [
+												...data,
+												item
+										];
+								}
+
+						});
+				let chartOptions = {
+						data,
+						fieldAlias: {
+								geo: countryField.fieldNameAlias,
 								metric: bbMetricField.fieldNameAlias
 						},
 						bbMetricOptions,
-						type: fieldMapping
+						isShowTooltip: this.chartOptions.optionByType.izShowTooltip,
+						type: GOOGLEMAP_GOOGLEMAP_FIELD_MAPPING.COUNTRY
 				};
 
 				return chartOptions;

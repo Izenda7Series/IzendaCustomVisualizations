@@ -304,3 +304,18 @@ export const NUMERIC_FORMAT = [
 				format: ''
 		}
 ];
+
+export const GOOGLEMAP_FIELD_MAPPING = {
+		LAT_LNG: {
+				id: 0,
+				name: 'lat/lng'
+		},
+		COUNTRY: {
+				id: 1,
+				name: 'country'
+		},
+		POSTAL_CODE: {
+				id: 2,
+				name: 'postalCode'
+		}
+};

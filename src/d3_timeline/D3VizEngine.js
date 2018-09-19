@@ -2,12 +2,17 @@ import {getClass} from 'IzendaSynergy';
 import * as d3 from 'd3';
 import 'd3-selection-multi';
 import './styles.css';
-import {helpers} from './../utils/D3TimelineHelper';
+import {helpers} from './../utils/CustomVizHelper';
 
 const VizEngine = getClass('VizEngine');
 
 export default class D3VizEngine extends VizEngine {
-
+		/*
+        @fn: draw
+        @scope: draw timeline chart.
+        @params: chartContainer, chartType, options, onCompleted.
+        @returns: n/a
+    */
 		draw(chartContainer, chartType, options, onCompleted) {
 				if (chartType === 'timeline') {
 						//extract properties from chart's options

@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 
-import {DATA_TYPE, DATETIME_FORMAT, NUMERIC_FORMAT} from './D3TimelineConstant';
+import {DATA_TYPE, DATETIME_FORMAT, NUMERIC_FORMAT} from './CustomVizConstant';
 
 // This class is using for formatting data, calculate something. This class can
 // be inherited by other charts.
@@ -106,7 +106,7 @@ class D3TimelineHelper {
 				let itemInOption = (options[prop].value && options[prop].value.find(val => val.key == value)) || (options[prop].rangeValue && options[prop].rangeValue.find(val => val.from <= value && val.to >= value)) || (options[prop].rangePercent && options[prop].rangePercent.find(val => val.from <= percentage && val.to >= percentage));
 				return itemInOption
 						? itemInOption.text
-						: (prop === 'cellColors' || prop === 'latitude'
+						: (prop === 'cellColors' || prop === 'latitude' || prop === 'postalCode' || prop === 'country'
 								? ''
 								: value);
 		}
