@@ -28,10 +28,6 @@ extendReportPartStyleConfiguration(REPORT_PART_TYPES.Map, 'GoogleMap', null, {
    * Declare Z-Axis Values field container
    */
 		fieldContainerSchema: [
-				createFieldContainerSchema('Country', 'Country', 'country', null, 1),
-				createFieldContainerSchema('State/Province', 'State/Province', 'state', null, 1),
-				createFieldContainerSchema('County', 'County', 'county', null, 1),
-				createFieldContainerSchema('City', 'City', 'city', null, 1),
 				createFieldContainerSchema('Postal Code', 'Postal Code', 'postalCode', null, 1),
 				createFieldContainerSchema('Latitude', 'Latitude', 'latitude', null, 1),
 				createFieldContainerSchema('Longitude', 'Longtitude', 'longtitude', null, 1),

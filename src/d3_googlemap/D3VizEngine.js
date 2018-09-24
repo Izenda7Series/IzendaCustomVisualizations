@@ -27,14 +27,11 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		}
 
 		draw(chartContainer, chartType, options, onCompleted) {
-
-				//detect type of received data : lat/lng or postcode/address
-
 				const drawGoogleMap = (chartContainer, options) => {
 						const {data, fieldAlias, type, isShowTooltip} = options;
 
-						if (type.id === GOOGLEMAP_FIELD_MAPPING.COUNTRY.id || type.id === GOOGLEMAP_FIELD_MAPPING.POSTAL_CODE.id) {
-								return this.drawMapByGetGeoCode(chartContainer, data, fieldAlias, type, isShowTooltip);
+						if (type && type.id === GOOGLEMAP_FIELD_MAPPING.POSTAL_CODE.id) {
+								return this.drawMapByGetGeoCode(chartContainer, data, fieldAlias, isShowTooltip);
 						} else {
 								return this.drawMapByLatLngs(chartContainer, data, fieldAlias, isShowTooltip);
 						}
@@ -99,7 +96,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 				}
 		}
 
-		drawMapByGetGeoCode(chartContainer, data, fieldAlias, type, isShowTooltip) {
+		drawMapByGetGeoCode(chartContainer, data, fieldAlias, isShowTooltip) {
 				const {map, bounds} = this.initialMap(chartContainer, data);
 
 				//google.maps.Geocoder constructor object
@@ -109,27 +106,10 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 
 				//Promise to get lat/lng by postcode
 				const getGeoCode = (item) => {
-						let val,
-								params;
-						if (type.id === GOOGLEMAP_FIELD_MAPPING.COUNTRY.id) {
-								val = item.country;
+						let val = item.postcode,
 								params = {
-										'country': val
+										'postalCode': val
 								};
-						} else {
-								if (item.country) {
-										val = `${item.country},${item.postcode}`;
-										params = {
-												'country': item.country,
-												'postalCode': item.postcode
-										};
-								} else {
-										val = item.postcode;
-										params = {
-												'postalCode': val
-										};
-								}
-						}
 
 						return new Promise((resolve, reject) => {
 								if (window._geoCache.has(val)) {
@@ -177,17 +157,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 												if (isShowTooltip) {
 														//define an infor window (tooltip)
 														const buildHTMLContent = () => {
-																let strResult = '';
-																if (type.id === GOOGLEMAP_FIELD_MAPPING.COUNTRY.id) {
-																		strResult = `<p>${fieldAlias.geo}: ${item.country}</p>`;
-																} else {
-																		if (item.country) {
-																				strResult = `<p>${fieldAlias.geo}: ${item.country}, ${item.postcode}</p>`;
-																		} else {
-																				strResult = `<p>${fieldAlias.geo}: ${item.postcode}</p>`;
-																		}
-																}
-																return strResult += `<p>${fieldAlias.metric}: ${item.metricText}</p>`;
+																return `<p>${fieldAlias.geo}: ${item.postcode}</p><p>${fieldAlias.metric}: ${item.metricText}</p>`;
 														};
 
 														let infowindow = new google
