@@ -1,10 +1,21 @@
 import * as d3 from 'd3';
 
-import {DATA_TYPE, DATETIME_FORMAT, NUMERIC_FORMAT} from './CustomVizConstant';
+import {DATA_TYPE, DATETIME_FORMAT, NUMERIC_FORMAT, MONTH_NAMES, DAYS_OF_WEEK} from './CustomVizConstant';
 
 // This class is using for formatting data, calculate something. This class can
 // be inherited by other charts.
 class D3TimelineHelper {
+		getFormatObject(dataType, formatString) {
+				return dataType === DATA_TYPE.DATE
+						? DATETIME_FORMAT.find(item => item.text === formatString)
+						: NUMERIC_FORMAT.find(item => item.text === formatString);
+		}
+		/*
+			@fn : getD3Format
+      @scope: get D3's standard format.
+			@params : dataType (datetime/numeric/money), format's string.
+			@returns : d3.format function (if find) || format id (number) get from DATETIME_FORMAT
+    */
 		getD3Format(dataType, formatString) {
 				// if (!formatString) 		return;
 				if (!formatString && dataType === DATA_TYPE.DATE) 
@@ -15,10 +26,34 @@ class D3TimelineHelper {
 				let fmFormula,
 						fnFormat;
 				if (dataType === DATA_TYPE.DATE) {
-						fmFormula = DATETIME_FORMAT.find(item => item.text === formatString);
-						fnFormat = fmFormula.format
-								? d3.timeFormat(fmFormula.format)
-								: fmFormula.id;
+						if (formatString === 'Day' || formatString === 'Month') {
+								fnFormat = (value) => {
+										return `${value < 10
+												? `0${value}`
+												: `${value}`}`;
+								};
+						} else if (formatString === 'Year') {
+								fnFormat = (value) => {
+										return value;
+								};
+						} else if (formatString === 'Month Name') {
+								fnFormat = (value) => {
+										return MONTH_NAMES[value - 1];
+								};
+						} else if (formatString === 'Day of Week') {
+								fnFormat = (value) => {
+										return DAYS_OF_WEEK[value - 1];
+								};
+						} else if (formatString === 'Qtr') {
+								fnFormat = (value) => {
+										return `Q${value}`;
+								};
+						} else {
+								fmFormula = DATETIME_FORMAT.find(item => item.text === formatString);
+								fnFormat = fmFormula.format
+										? d3.timeFormat(fmFormula.format)
+										: fmFormula.id;
+						}
 				} else {
 						fmFormula = NUMERIC_FORMAT.find(item => item.text === formatString);
 						fnFormat = fmFormula.format
@@ -27,7 +62,12 @@ class D3TimelineHelper {
 				}
 				return fnFormat;
 		}
-		// format data which are not supporting by d3js
+		/*
+			@fn : formatData
+			@scope : ormat data which are not supporting by d3js
+			@params : fnFormat (d3.format), value, format type.
+			@returns : value's string after formatting
+    */
 		formatData(fnFormat, val, formatType) {
 				if (typeof(fnFormat) !== 'number') 
 						return fnFormat(val);
@@ -99,6 +139,10 @@ class D3TimelineHelper {
 		getQuarterOfYear(date) {
 				const month = date.getMonth() + 1;
 				return Math.ceil(month / 3);
+		}
+
+		hasParseDate(objDateFormat) {
+				return objDateFormat.id !== 11 && objDateFormat.id !== 12 && objDateFormat.id !== 13 && objDateFormat.id !== 14 && objDateFormat.id !== 15 && (objDateFormat.id <= 17 && objDateFormat.id >= 27);
 		}
 
 		// this function is using to get colors/ alternative texts from settings

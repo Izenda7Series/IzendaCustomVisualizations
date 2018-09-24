@@ -1,4 +1,4 @@
-[
+const geoData = [
  {
    "SiteName": "Site 10",
    "PostCode": " W1T 7PZ",
@@ -27887,4 +27887,6 @@
    "GPSLatitude": 60.148029,
    "GPSLongitude": -1.162484
  }
-]
+];
+
+export default geoData;

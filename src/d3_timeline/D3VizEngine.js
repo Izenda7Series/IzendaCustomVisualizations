@@ -46,7 +46,8 @@ export default class D3VizEngine extends VizEngine {
 										groupOptions,
 										metricOptions,
 										startOptions
-								}
+								},
+								hasParseAxisData
 						} = options;
 
 						const containerWidth = chartContainer.clientWidth;
@@ -111,18 +112,25 @@ export default class D3VizEngine extends VizEngine {
 						const xAxisTopCall = d3
 										.axisTop(x1)
 										.tickFormat(d => {
-												return rangeFormat
-														? helpers.formatData(rangeFormat, d, startOptions.fieldDataType)
-														: d;
+												if (rangeFormat) {
+														return helpers.formatData(rangeFormat, d, startOptions.fieldDataType);
+														// if (!hasParseAxisData) { 		if (!Number.isInteger(d)) 				return; 		return
+														// helpers.formatData(rangeFormat, d, startOptions.fieldDataType); } else {
+														// 		return helpers.formatData(rangeFormat, d, startOptions.fieldDataType); }
+												} else {
+														return d;
+												}
 										})
-										.tickSize(3)
-										.ticks(8),
+										.ticks(8)
+										.tickSize(3),
 								xAxisBottomCall = d3
 										.axisBottom(x)
 										.tickFormat(d => {
-												return rangeFormat
-														? helpers.formatData(rangeFormat, d, startOptions.fieldDataType)
-														: d;
+												if (rangeFormat) {
+														return helpers.formatData(rangeFormat, d, startOptions.fieldDataType);
+												} else {
+														return d;
+												}
 										})
 										.ticks(8)
 										.tickSize(3);

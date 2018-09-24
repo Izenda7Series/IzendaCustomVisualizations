@@ -1,5 +1,7 @@
 import {getClass} from 'IzendaSynergy';
 import * as d3 from 'd3';
+const moment = require('moment');
+
 import {DATA_TYPE, DEFAULT_COLORS} from './../utils/CustomVizConstant';
 import {helpers} from './../utils/CustomVizHelper';
 
@@ -33,7 +35,8 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 				};
 
 				const startOptions = {
-						fieldDataType: startFieldOptions.fieldDataType
+						fieldDataType: startFieldOptions.fieldDataType,
+						objFormat: helpers.getFormatObject(startFieldOptions.fieldDataType, startFieldOptions.fieldFormatData)
 				};
 
 				// settings for group: text color, alternative text
@@ -53,6 +56,26 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 						];
 				});
 
+				console.log(chartData.records[0][startField.columnName]);
+				const hasParseData = startOptions.objFormat && helpers.hasParseDate(startOptions.objFormat) || false;
+
+				const getStartValue = (value) => {
+						if (rangeDataType !== DATA_TYPE.DATE) 
+								return value;
+						if (hasParseData) 
+								return new Date(value);
+						if (startFieldOptions.fieldFormatData === 'Week Number') {
+								const fnFormat = d3.timeParse('%Y-%U');
+								return fnFormat(value);
+						} else if (startFieldOptions.fieldFormatData === 'yyyy - Qtr') {
+								return moment(value.toString(), 'YYYY-Q')._d;
+						} else if (startOptions.objFormat.id >= 20 && startOptions.objFormat.id <= 27) {
+								return moment(value, 'HH:mm:ss')._d;
+						} else {
+								return value;
+						}
+				};
+
 				let items = [];
 				chartData
 						.records
@@ -63,12 +86,11 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 										let item = {
 												groupId: group.indexOf(record[groupField.columnName]),
 												value: record[metricField.columnName],
-												start: rangeDataType === DATA_TYPE.DATE
-														? new Date(start)
-														: start,
-												end: rangeDataType === DATA_TYPE.DATE
-														? new Date(end)
-														: end,
+												// start: rangeDataType === DATA_TYPE.DATE && hasParseData 		? new Date(start)
+												// 		: start, end: rangeDataType === DATA_TYPE.DATE && hasParseData 		? new
+												// Date(end) 		: end,
+												start: getStartValue(start),
+												end: getStartValue(end),
 												groupName: record[groupField.columnName],
 												percentage: record[`percentage_${metricField.columnName}`]
 														? record[`percentage_${metricField.columnName}`]
@@ -135,13 +157,23 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 
 						switch (dataType) {
 								case DATA_TYPE.DATE:
-										scales.x = d3
-												.scaleTime()
-												.domain([timelineBegin, timelineEnd]);
-										scales.x1 = d3
-												.scaleTime()
-												.domain([timelineBegin, timelineEnd]);
-										scales.x2 = d3.scaleTime();
+										if (hasParseData) {
+												scales.x = d3
+														.scaleTime()
+														.domain([timelineBegin, timelineEnd]);
+												scales.x1 = d3
+														.scaleTime()
+														.domain([timelineBegin, timelineEnd]);
+												scales.x2 = d3.scaleTime();
+										} else {
+												scales.x = d3
+														.scaleLinear()
+														.domain([timelineBegin, timelineEnd]);
+												scales.x1 = d3
+														.scaleLinear()
+														.domain([timelineBegin, timelineEnd]);
+												scales.x2 = d3.scaleLinear();
+										}
 										break;
 
 								case DATA_TYPE.NUMBER || DATA_TYPE.MONEY:
@@ -162,6 +194,7 @@ export default class D3TimelineOptionsBuilder extends ChartOptionsBuilder {
 
 				const scales = defineScales(rangeDataType);
 				chartConfigs.scales = scales;
+				chartConfigs.hasParseAxisData = hasParseData;
 
 				return chartConfigs;
 		}

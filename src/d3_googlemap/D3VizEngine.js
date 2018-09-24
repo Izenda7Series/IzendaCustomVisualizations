@@ -20,7 +20,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 				this.scriptCache = this.scriptCache
 						? this.scriptCache
 						: defaultCreateCache();
-				//
+
 				window._geoCache = window._geoCache
 						? window._geoCache
 						: new Map();
