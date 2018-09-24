@@ -267,9 +267,7 @@ export default class D3VizEngine extends VizEngine {
 						d3
 								.select('.brush')
 								.transition()
-								.call(brush.move, [
-										0, width / 3
-								]);
+								.call(brush.move, [0, width]);
 
 						//timeline tooltip
 						const _tooltip = function (selection) {
