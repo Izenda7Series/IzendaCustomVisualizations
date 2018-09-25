@@ -114,9 +114,6 @@ export default class D3VizEngine extends VizEngine {
 										.tickFormat(d => {
 												if (rangeFormat) {
 														return helpers.formatData(rangeFormat, d, startOptions.fieldDataType);
-														// if (!hasParseAxisData) { 		if (!Number.isInteger(d)) 				return; 		return
-														// helpers.formatData(rangeFormat, d, startOptions.fieldDataType); } else {
-														// 		return helpers.formatData(rangeFormat, d, startOptions.fieldDataType); }
 												} else {
 														return d;
 												}
@@ -242,9 +239,9 @@ export default class D3VizEngine extends VizEngine {
 								.data(data)
 								.enter()
 								.append('rect')
-								.attr('x', d => x(d.start))
+								.attr('x', d => x(d.parsedStart))
 								.attr('y', d => y2(d.groupId + 0.5) - 5)
-								.attr('width', d => x(d.end) - x(d.start) || x(1))
+								.attr('width', d => x(d.parsedEnd) - x(d.parsedStart) || x(1))
 								.attr('height', 10)
 								.attr('stroke-width', 6)
 								.attr('fill', d => {
@@ -296,10 +293,10 @@ export default class D3VizEngine extends VizEngine {
 												.groupField}: ${helpers
 												.getSettings(groupOptions, 'alternativeText', d.groupName, d.percentage)}</p><p>${fieldNameAlias
 												.startField}: <span>${rangeFormat
-												? helpers.formatData(rangeFormat, d.start, startOptions.fieldDataType)
-												: d.start}</span></p><p>${fieldNameAlias.endField}: <span>${rangeFormat
-														? helpers.formatData(rangeFormat, d.end, startOptions.fieldDataType)
-														: d.end}</span></p><p>${fieldNameAlias.groupField}: <span>${checkMetricAlterText(d)}</span></p>`;
+												? helpers.formatData(rangeFormat, d.parsedStart, startOptions.fieldDataType)
+												: d.parsedStart}</span></p><p>${fieldNameAlias.endField}: <span>${rangeFormat
+														? helpers.formatData(rangeFormat, d.parsedEnd, startOptions.fieldDataType)
+														: d.parsedEnd}</span></p><p>${fieldNameAlias.groupField}: <span>${checkMetricAlterText(d)}</span></p>`;
 
 										tooltip
 												.transition()
@@ -335,7 +332,7 @@ export default class D3VizEngine extends VizEngine {
 								let timeSelection = selection.map(x.invert),
 										minExtent = timeSelection[0],
 										maxExtent = timeSelection[1],
-										visItems = data.filter(d => d.start < maxExtent && d.end > minExtent);
+										visItems = data.filter(d => d.parsedStart < maxExtent && d.parsedEnd > minExtent);
 
 								//update domain for main axis
 								x1.domain([minExtent, maxExtent]);
@@ -362,9 +359,9 @@ export default class D3VizEngine extends VizEngine {
 										.enter()
 										.append('rect')
 										.merge(rects)
-										.attr('x', d => x1(d.start))
+										.attr('x', d => x1(d.parsedStart))
 										.attr('y', d => y1(d.groupId) + 3)
-										.attr('width', d => x1(d.end) - x1(d.start) || 0)
+										.attr('width', d => x1(d.parsedEnd) - x1(d.parsedStart) || 0)
 										.attr('height', d => y1(1) - 6)
 										.styles(d => ({
 												'stroke-width': 6,

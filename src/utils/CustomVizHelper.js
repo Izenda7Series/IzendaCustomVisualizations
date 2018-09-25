@@ -1,6 +1,14 @@
 import * as d3 from 'd3';
+const moment = require('moment');
 
-import {DATA_TYPE, DATETIME_FORMAT, NUMERIC_FORMAT, MONTH_NAMES, DAYS_OF_WEEK} from './CustomVizConstant';
+import {
+		DATA_TYPE,
+		DATETIME_FORMAT,
+		NUMERIC_FORMAT,
+		MONTH_NAMES,
+		DAYS_OF_WEEK,
+		MOMENT_DATETIME_FORMAT
+} from './CustomVizConstant';
 
 // This class is using for formatting data, calculate something. This class can
 // be inherited by other charts.
@@ -129,10 +137,19 @@ class D3TimelineHelper {
 				return (value / sum) * 100;
 		}
 
-		getTimelineRange(data) {
-				const startList = data.map(item => item.start),
+		getTimelineRange(data, useParsedValue = true) {
+				let startList,
+						endList,
+						range;
+				if (useParsedValue) {
+						startList = data.map(item => item.parsedStart);
+						endList = data.map(item => item.parsedEnd);
+						range = d3.extent(d3.merge([startList, endList]));
+				} else {
+						startList = data.map(item => item.start);
 						endList = data.map(item => item.end);
-				const range = d3.extent(d3.merge([startList, endList]));
+						range = d3.extent(d3.merge([startList, endList]));
+				}
 				return {timelineBegin: range[0], timelineEnd: range[1]};
 		}
 
@@ -142,7 +159,7 @@ class D3TimelineHelper {
 		}
 
 		hasParseDate(objDateFormat) {
-				return objDateFormat.id !== 11 && objDateFormat.id !== 12 && objDateFormat.id !== 13 && objDateFormat.id !== 14 && objDateFormat.id !== 15 && (objDateFormat.id <= 17 && objDateFormat.id >= 27);
+				return objDateFormat.id !== 11 && objDateFormat.id !== 12 && objDateFormat.id !== 13 && objDateFormat.id !== 14 && objDateFormat.id !== 15 && objDateFormat.id !== 19;
 		}
 
 		// this function is using to get colors/ alternative texts from settings
@@ -154,6 +171,21 @@ class D3TimelineHelper {
 								? ''
 								: value);
 		}
-}
 
+		parseDate(value, formatObj) {
+				if (!formatObj) 
+						return new Date(value);
+				if (formatObj.text === 'Week Number') {
+						const fnFormat = d3.timeParse('%Y-%U');
+						return fnFormat(value);
+				} else if (formatObj.text === 'yyyy - Qtr') {
+						return moment(value.toString(), 'YYYY-Q')._d;
+				} else if (formatObj.id >= 20 && formatObj.id <= 27) {
+						return moment(value, 'HH:mm:ss')._d;
+				} else {
+						return new Date(value);
+				}
+
+		}
+}
 export const helpers = new D3TimelineHelper();
