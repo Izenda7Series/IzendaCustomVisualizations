@@ -301,7 +301,7 @@ export default class D3VizEngine extends VizEngine {
 										tooltip
 												.transition()
 												.duration(200)
-												.style("opacity", 0.9);
+												.style("opacity", 1);
 										tooltip
 												.html(htmlTooltip)
 												.style("left", `${d3.event.pageX + 5}px`)
