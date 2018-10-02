@@ -69,6 +69,6 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.9.0",
-    "highcharts": "^4.2.7"
+    "highcharts": "6.1.0"
   }
 }
