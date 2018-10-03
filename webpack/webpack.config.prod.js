@@ -10,6 +10,10 @@ const ExtractSASS = new ExtractTextPlugin('styles/bundle.css');
 module.exports = merge(common, {
   mode: 'production',
   devtool: 'source-map',
+  output: {
+    path: dest,
+    filename: 'customchart.js' // To inject to mvc for testing.
+  },
   stats: 'errors-only',
   optimization: {
     minimize: true
