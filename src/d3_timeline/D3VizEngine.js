@@ -167,7 +167,7 @@ export default class D3VizEngine extends VizEngine {
 			const tooltip = d3
 				.select(chartContainer)
 				.append('div')
-				.classed('tooltip', true);
+				.classed('d3-tooltip', true);
 
 			//main group and texts
 			main
@@ -287,7 +287,7 @@ export default class D3VizEngine extends VizEngine {
 
 				if (!isShowTooltip)
 					return;
-				selection.on('mouseover.tooltip', (d) => {
+				selection.on('mouseover.d3-tooltip', (d) => {
 					//get data of item and then render into html
 					const htmlTooltip = `<p class="text-name">${fieldNameAlias
 						.groupField}: ${helpers
@@ -306,12 +306,12 @@ export default class D3VizEngine extends VizEngine {
 						.html(htmlTooltip)
 						.style("left", `${d3.event.pageX + 5}px`)
 						.style("top", `${d3.event.pageY + 5}px`);
-				}).on('mousemove.tooltip', () => {
+				}).on('mousemove.d3-tooltip', () => {
 					//update tooltip's position
 					tooltip
 						.style("left", `${d3.event.pageX + 5}px`)
 						.style("top", `${d3.event.pageY + 5}px`);
-				}).on('mouseout.tooltip', () => {
+				}).on('mouseout.d3-tooltip', () => {
 					//transition and hide tooltip
 					tooltip
 						.transition()
