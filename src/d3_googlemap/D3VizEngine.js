@@ -20,50 +20,63 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		this.scriptCache = this.scriptCache
 			? this.scriptCache
 			: defaultCreateCache();
-
+		//create the geo cache for postcodes
 		window._geoCache = window._geoCache
 			? window._geoCache
 			: new Map();
 	}
 
 	draw(chartContainer, chartType, options, onCompleted) {
-		const drawGoogleMap = (chartContainer, options) => {
-			const { data, fieldAlias, type, isShowTooltip } = options;
+
+		const drawGoogleMap = () => {
+			const { type } = options;
 
 			if (type && type.id === GOOGLEMAP_FIELD_MAPPING.POSTAL_CODE.id) {
-				return this.drawMapByGetGeoCode(chartContainer, data, fieldAlias, isShowTooltip);
+				this.drawMapByGetGeoCode(chartContainer, options, onCompleted);
 			} else {
-				return this.drawMapByLatLngs(chartContainer, data, fieldAlias, isShowTooltip);
+				this.drawMapByLatLngs(chartContainer, options, onCompleted);
 			}
 		};
 
 		if (chartType === 'googlemap') {
-			const onLoad = (err, tag) => {
-				this._gapi = window.google;
-				return drawGoogleMap(chartContainer, options);
-			};
-
 			if (!window.google) {
+
+				const onLoad = (err, tag) => {
+					this._gapi = window.google;
+					return drawGoogleMap();
+				};
+
 				return this
 					.scriptCache
 					.google
 					.onLoad(onLoad);
 			}
-			return drawGoogleMap(chartContainer, options);
+
+			return drawGoogleMap();
 		}
 	}
 
-	drawMapByLatLngs(chartContainer, data, fieldAlias, isShowTooltip) {
-		const { map, bounds } = this.initialMap(chartContainer, data);
+	drawMapByLatLngs(chartContainer, { data, fieldAlias, isShowTooltip }, fnCallback) {
+
+		const { map, bounds, inforWindow } = this.initialMap(chartContainer, data.length);
+		let latLng, marker;
+
+		//bind event on Map to close inforWindow
+		google.maps.event.addListener(map, 'click', function () {
+			inforWindow.close();
+		});
+
+		//attach callback function when the map loaded.
+		google.maps.event.addListenerOnce(map, 'tilesloaded', fnCallback);
 
 		data.forEach(item => {
 			//define latitude and longitude
-			let latLng = new google
+			latLng = new google
 				.maps
 				.LatLng(item.lat, item.lng);
 
 			//define marker
-			let marker = new google
+			marker = new google
 				.maps
 				.Marker({
 					position: latLng,
@@ -75,30 +88,37 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 			bounds.extend(latLng);
 
 			if (isShowTooltip) {
-				//define an infor window (tooltip)
-				const inforHTML = `<p>Lat: ${item.lat}</p><p>Lng : ${item.lng}</p><p>${fieldAlias.metric}: ${item.metricText}</p>`;
-
-				let infowindow = new google
-					.maps
-					.InfoWindow({ content: inforHTML });
-
-				//add event for displaying tooltip
-				marker.addListener('click', function () {
-					infowindow.open(map, marker);
-				});
+				google.maps.event.addListener(marker, 'click', ((marker, item) => {
+					return () => {
+						const inforHTML = `<p>Lat: ${item.lat}</p><p>Lng : ${item.lng}</p><p>${fieldAlias.metric}: ${item.metricText}</p>`;
+						inforWindow.setContent(inforHTML);
+						inforWindow.open(map, marker);
+					}
+				})(marker, item));
 			}
 		});
 
 		//center map
 		if (data.length > 0) {
 			map.fitBounds(bounds);
-			map.panToBounds(bounds);
+			//map.panToBounds(bounds);
 		}
+		fnCallback && fnCallback();
 	}
 
-	drawMapByGetGeoCode(chartContainer, data, fieldAlias, isShowTooltip) {
-		const { map, bounds } = this.initialMap(chartContainer, data);
+	drawMapByGetGeoCode(chartContainer, { data, fieldAlias, isShowTooltip }, fnCallback) {
+		const { map, bounds, inforWindow } = this.initialMap(chartContainer, data.length);
 
+		//bind event on Map to close inforWindow
+		google.maps.event.addListener(map, 'click', function () {
+			inforWindow.close();
+		});
+
+		//attach callback function when the map loaded.
+		google.maps.event.addListenerOnce(map, 'tilesloaded', fnCallback);
+
+		//marker
+		let marker;
 		//google.maps.Geocoder constructor object
 		const geoCoder = new google
 			.maps
@@ -106,22 +126,21 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 
 		//Promise to get lat/lng by postcode
 		const getGeoCode = (item) => {
-			let val = item.postcode,
-				params = {
-					'postalCode': val
-				};
+
+			const { postcode } = item;
 
 			return new Promise((resolve, reject) => {
-				if (window._geoCache.has(val)) {
-					resolve(window._geoCache.get(val));
+				if (window._geoCache.has(postcode)) {
+					resolve(window._geoCache.get(postcode));
+
 				} else {
 					geoCoder.geocode({
-						address: val
+						address: postcode
 					}, (result, status) => {
 						if (status === google.maps.GeocoderStatus.OK) {
 							window
 								._geoCache
-								.set(val, result);
+								.set(postcode, result);
 							resolve(result);
 						} else {
 							if (status == google.maps.GeocoderStatus.OVER_QUERY_LIMIT) {
@@ -138,51 +157,42 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		};
 
 		//render marker by data
-		data.forEach((item, index) => {
-			const renderItem = (item) => {
-				getGeoCode(item).then((result) => {
-					if (result[0]) {
-						//define marker
-						let marker = new google
-							.maps
-							.Marker({
-								position: result[0].geometry.location,
-								map: map,
-								icon: this.getPinStyle(item)
-							});
+		data.forEach(item => {
 
-						//extend bounds
-						bounds.extend(result[0].geometry.location);
+			getGeoCode(item).then(result => {
+				if (result[0]) {
+					//define marker
+					marker = new google
+						.maps
+						.Marker({
+							position: result[0].geometry.location,
+							map: map,
+							icon: this.getPinStyle(item)
+						});
 
-						if (isShowTooltip) {
-							//define an infor window (tooltip)
-							const buildHTMLContent = () => {
-								return `<p>${fieldAlias.geo}: ${item.postcode}</p><p>${fieldAlias.metric}: ${item.metricText}</p>`;
-							};
+					//extend bounds
+					bounds.extend(result[0].geometry.location);
 
-							let infowindow = new google
-								.maps
-								.InfoWindow({ content: buildHTMLContent() });
-
-							//add event for displaying tooltip
-							marker.addListener('click', function () {
-								infowindow.open(map, marker);
-							});
-						}
-
-						//if this is the last item => add center map
-						if (item.id === data.length - 1) {
-							map.fitBounds(bounds);
-							map.panToBounds(bounds);
-						}
+					if (isShowTooltip) {
+						//bind event to marker
+						google.maps.event.addListener(marker, 'click', ((marker, item) => {
+							return () => {
+								const inforHTML = `<p>${fieldAlias.geo}: ${item.postcode}</p><p>${fieldAlias.metric}: ${item.metricText}</p>`;
+								inforWindow.setContent(inforHTML);
+								inforWindow.open(map, marker);
+							}
+						})(marker, item));
 					}
 
-				}).catch(error => {
-					console.log(error);
-				});
-			};
-
-			renderItem(item);
+					//if this is the last item => add center map
+					if (item.id === data.length - 1) {
+						map.fitBounds(bounds);
+						//map.panToBounds(bounds);
+					}
+				}
+			}).catch(error => {
+				console.log(error);
+			});
 		});
 	}
 
@@ -190,14 +200,15 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		return {
 			path: google.maps.SymbolPath.CIRCLE,
 			fillColor: item.color || '#ff0000',
-			fillOpacity: .5,
+			fillOpacity: .3,
 			scale: 15,
+			//scale: Math.pow(2, item.value) / 2,
 			strokeColor: '#fff',
 			strokeWeight: .5
 		};
 	}
 
-	initialMap(chartContainer, data) {
+	initialMap(chartContainer, dataLength) {
 		let pos = {
 			lat: 37.09024,
 			lng: -95.712891
@@ -206,7 +217,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		const map = new google
 			.maps
 			.Map(chartContainer, {
-				zoom: 1,
+				zoom: 2,
 				center: pos
 			});
 
@@ -214,8 +225,13 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 			.maps
 			.LatLngBounds();
 
-		data.length === 0 && bounds.extend(new google.maps.LatLng(pos.lat, pos.lng));
-		return { map, bounds };
+		const inforWindow = new google
+			.maps
+			.InfoWindow();
+
+		dataLength === 0 && bounds.extend(new google.maps.LatLng(pos.lat, pos.lng));
+
+		return { map, bounds, inforWindow };
 	}
 
 }
