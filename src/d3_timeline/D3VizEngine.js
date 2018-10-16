@@ -165,7 +165,7 @@ export default class D3VizEngine extends VizEngine {
 				.text(`${fieldNameAlias.groupField}`);
 			//append tooltip to chart container
 			const tooltip = d3
-				.select(chartContainer)
+				.select(document.querySelector('body'))
 				.append('div')
 				.classed('d3-tooltip', true);
 
