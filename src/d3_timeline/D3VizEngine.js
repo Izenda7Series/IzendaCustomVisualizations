@@ -320,7 +320,7 @@ export default class D3VizEngine extends VizEngine {
 				});
 			};
 			//notify finish renderring
-			onCompleted && onCompleted();
+			//onCompleted && onCompleted();
 
 			function brushed() {
 				//get brush selection
