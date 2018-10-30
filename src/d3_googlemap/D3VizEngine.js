@@ -20,6 +20,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		this.scriptCache = this.scriptCache
 			? this.scriptCache
 			: defaultCreateCache();
+
 		//create the geo cache for postcodes
 		window._geoCache = window._geoCache
 			? window._geoCache
@@ -65,30 +66,46 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 			inforWindow.close();
 		});
 
-		//attach callback function when the map loaded.
-		google.maps.event.addListener(map, 'tilesloaded', fnCallback);
+		//attach callback function when the map loaded. convert canvas to image because of exporting issues.
+		try {
+			google.maps.event.addListenerOnce(map, 'tilesloaded', function () {
+				var canvasTags = document.querySelectorAll('canvas');
+				var canvasLength = canvasTags.length;
+				for (var i = 0; i <= canvasLength - 1; i++) {
+					var imgTag = new Image();
+					var imgData = canvasTags[i].toDataURL();
+					imgTag.src = imgData;
+					var parentTag = canvasTags[i].parentElement;
+					parentTag.appendChild(imgTag);
+					parentTag.removeChild(canvasTags[i]);
+				}
+				fnCallback && fnCallback();
+			});
+		} catch (error) {
+			fnCallback && fnCallback();
+		}
+
 
 		data.forEach(item => {
 			//define latitude and longitude
 			const latLng = { lat: parseFloat(item.lat), lng: parseFloat(item.lng) };
 
+			//extend bounds
+			bounds.extend(latLng);
+
 			//test for marker icon
 			const markerIcon = this.getPinStyle(item);
-			// const markerIcon = 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png';
-			//define marker
+
+			//add marker
 			let marker = new google
 				.maps
 				.Marker({
 					position: latLng,
-					icon: markerIcon,
-					label: "Where are you?? My icon????"
+					map: map,
+					icon: markerIcon
 				});
 
-			//extend bounds
-			bounds.extend(latLng);
-
-			marker.setMap(map);
-
+			//check for tooltip
 			if (isShowTooltip) {
 				google.maps.event.addListener(marker, 'click', ((marker, item) => {
 					return () => {
@@ -103,7 +120,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		//center map
 		if (data.length > 0) {
 			map.fitBounds(bounds);
-			//map.panToBounds(bounds);
+			map.panToBounds(bounds);
 		}
 	}
 
@@ -115,11 +132,25 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 			inforWindow.close();
 		});
 
-		//attach callback function when the map loaded.
-		google.maps.event.addListenerOnce(map, 'tilesloaded', fnCallback);
+		//attach callback function when the map loaded. convert canvas to image because of exporting issues.
+		try {
+			google.maps.event.addListenerOnce(map, 'tilesloaded', function () {
+				var canvasTags = document.querySelectorAll('canvas');
+				var canvasLength = canvasTags.length;
+				for (var i = 0; i <= canvasLength - 1; i++) {
+					var imgTag = new Image();
+					var imgData = canvasTags[i].toDataURL();
+					imgTag.src = imgData;
+					var parentTag = canvasTags[i].parentElement;
+					parentTag.appendChild(imgTag);
+					parentTag.removeChild(canvasTags[i]);
+				}
+				fnCallback && fnCallback();
+			});
+		} catch (error) {
+			fnCallback && fnCallback();
+		}
 
-		//marker
-		let marker;
 		//google.maps.Geocoder constructor object
 		const geoCoder = new google
 			.maps
@@ -127,13 +158,10 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 
 		//Promise to get lat/lng by postcode
 		const getGeoCode = (item) => {
-
 			const { postcode } = item;
-
 			return new Promise((resolve, reject) => {
 				if (window._geoCache.has(postcode)) {
 					resolve(window._geoCache.get(postcode));
-
 				} else {
 					geoCoder.geocode({
 						address: postcode
@@ -159,22 +187,22 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 
 		//render marker by data
 		data.forEach(item => {
-
 			getGeoCode(item).then(result => {
 				if (result[0]) {
-					//marker's icon
+					//extend bounds
+					bounds.extend(result[0].geometry.location);
+
+					//get marker's icon
 					const markerIcon = this.getPinStyle(item);
-					//define marker
-					marker = new google
+
+					//add marker
+					let marker = new google
 						.maps
 						.Marker({
 							position: result[0].geometry.location,
 							map: map,
 							icon: markerIcon
 						});
-
-					//extend bounds
-					bounds.extend(result[0].geometry.location);
 
 					if (isShowTooltip) {
 						//bind event to marker
@@ -190,7 +218,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 					//if this is the last item => add center map
 					if (item.id === data.length - 1) {
 						map.fitBounds(bounds);
-						//map.panToBounds(bounds);
+						map.panToBounds(bounds);
 					}
 				}
 			}).catch(error => {
@@ -235,5 +263,4 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 
 		return { map, bounds, inforWindow };
 	}
-
 }

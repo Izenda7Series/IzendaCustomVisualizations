@@ -319,8 +319,6 @@ export default class D3VizEngine extends VizEngine {
 						.style('opacity', 0);
 				});
 			};
-			//notify finish renderring
-			//onCompleted && onCompleted();
 
 			function brushed() {
 				//get brush selection
@@ -374,6 +372,9 @@ export default class D3VizEngine extends VizEngine {
 						}
 					}))
 					.call(_tooltip);
+
+				//notify finish renderring
+				onCompleted && onCompleted();
 			}
 		} // end of draw timeline chart
 	}
