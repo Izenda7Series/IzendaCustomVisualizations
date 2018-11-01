@@ -4,11 +4,13 @@ import { GOOGLEMAP_FIELD_MAPPING } from './../utils/CustomVizConstant';
 import { ScriptCache } from './google_api_loader/ScriptCache';
 import { GoogleApi } from './google_api_loader/GoogleApi';
 
+import './assets/styles.css';
+
 const VizEngine = getClass('VizEngine');
 
 const defaultCreateCache = () => {
 	return ScriptCache({
-		google: GoogleApi({ apiKey: 'GOOGLE_API_KEY' })
+		google: GoogleApi({ apiKey: 'AIzaSyDTUf-J6QNtYrF4ZJ9NuIsHEySSL-fg0qY' })
 	});
 };
 
@@ -59,7 +61,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 
 	drawMapByLatLngs(chartContainer, { data, fieldAlias, isShowTooltip }, fnCallback) {
 
-		const { map, bounds, inforWindow } = this.initialMap(chartContainer, data.length);
+		const { map, inforWindow } = this.initialMap(chartContainer, data.length);
 
 		//bind event on Map to close inforWindow
 		google.maps.event.addListener(map, 'click', function () {
@@ -85,6 +87,10 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 			fnCallback && fnCallback();
 		}
 
+		// create new bounds
+		const bounds = new google
+			.maps
+			.LatLngBounds();
 
 		data.forEach(item => {
 			//define latitude and longitude
@@ -109,7 +115,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 			if (isShowTooltip) {
 				google.maps.event.addListener(marker, 'click', ((marker, item) => {
 					return () => {
-						const inforHTML = `<p>Lat: ${item.lat}</p><p>Lng : ${item.lng}</p><p>${fieldAlias.metric}: ${item.metricText}</p>`;
+						const inforHTML = `<p class="gmap-tooltip-text">Lat: ${item.lat}</p><p class="gmap-tooltip-text">Lng : ${item.lng}</p><p class="gmap-tooltip-text">${fieldAlias.metric}: ${item.metricText}</p>`;
 						inforWindow.setContent(inforHTML);
 						inforWindow.open(map, marker);
 					};
@@ -125,7 +131,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 	}
 
 	drawMapByGetGeoCode(chartContainer, { data, fieldAlias, isShowTooltip }, fnCallback) {
-		const { map, bounds, inforWindow } = this.initialMap(chartContainer, data.length);
+		const { map, inforWindow } = this.initialMap(chartContainer, data.length);
 
 		//bind event on Map to close inforWindow
 		google.maps.event.addListener(map, 'click', function () {
@@ -155,6 +161,11 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		const geoCoder = new google
 			.maps
 			.Geocoder();
+
+		// create new bounds
+		const bounds = new google
+			.maps
+			.LatLngBounds();
 
 		//Promise to get lat/lng by postcode
 		const getGeoCode = (item) => {
@@ -186,7 +197,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		};
 
 		//render marker by data
-		data.forEach(item => {
+		data.forEach((item, index) => {
 			getGeoCode(item).then(result => {
 				if (result[0]) {
 					//extend bounds
@@ -208,7 +219,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 						//bind event to marker
 						google.maps.event.addListener(marker, 'click', ((marker, item) => {
 							return () => {
-								const inforHTML = `<p>${fieldAlias.geo}: ${item.postcode}</p><p>${fieldAlias.metric}: ${item.metricText}</p>`;
+								const inforHTML = `<p class="gmap-tooltip-text">${fieldAlias.geo}: ${item.postcode}</p><p class="gmap-tooltip-text">${fieldAlias.metric}: ${item.metricText}</p>`;
 								inforWindow.setContent(inforHTML);
 								inforWindow.open(map, marker);
 							};
@@ -216,7 +227,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 					}
 
 					//if this is the last item => add center map
-					if (item.id === data.length - 1) {
+					if (index === data.length - 1) {
 						map.fitBounds(bounds);
 						map.panToBounds(bounds);
 					}
@@ -231,7 +242,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		return {
 			path: google.maps.SymbolPath.CIRCLE,
 			fillColor: item.color || '#ff0000',
-			fillOpacity: .3,
+			fillOpacity: .4,
 			scale: 15,
 			strokeColor: '#fff',
 			strokeWeight: .5

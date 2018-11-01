@@ -13,3 +13,6 @@
 	top: 8px;
 	pointer-events: none;
 }
+.gmap-tooltip-text{
+	color: #000;
+}
