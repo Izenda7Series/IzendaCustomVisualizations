@@ -35,13 +35,24 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 	draw(chartContainer, chartType, options, onCompleted) {
 
 		const drawGoogleMap = () => {
-			const { type } = options;
 
-			if (type && type.id === GOOGLEMAP_FIELD_MAPPING.POSTAL_CODE.id) {
-				this.drawMapByGetGeoCode(chartContainer, options, onCompleted);
-			} else {
-				this.drawMapByLatLngs(chartContainer, options, onCompleted);
-			}
+			this.initGMap()
+				.then(pos => {
+					const map = new google
+						.maps
+						.Map(chartContainer, {
+							zoom: 2,
+							center: pos
+						});
+
+					const { type } = options;
+
+					if (type && type.id === GOOGLEMAP_FIELD_MAPPING.POSTAL_CODE.id) {
+						this.drawMapByGetGeoCode(chartContainer, options, map, onCompleted);
+					} else {
+						this.drawMapByLatLngs(chartContainer, options, map, onCompleted);
+					}
+				});
 		};
 
 		if (chartType === 'googlemap') {
@@ -62,9 +73,12 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		}
 	}
 
-	drawMapByLatLngs(chartContainer, { data, fieldAlias, isShowTooltip }, fnCallback) {
+	drawMapByLatLngs(chartContainer, { data, fieldAlias, isShowTooltip }, map, fnCallback) {
 
-		const { map, inforWindow } = this.initialMap(chartContainer, data.length);
+		//create inforWindow
+		const inforWindow = new google
+			.maps
+			.InfoWindow();
 
 		//bind event on Map to close inforWindow
 		google.maps.event.addListener(map, 'click', function () {
@@ -132,8 +146,12 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		});
 	}
 
-	drawMapByGetGeoCode(chartContainer, { data, fieldAlias, isShowTooltip }, fnCallback) {
-		const { map, inforWindow } = this.initialMap(chartContainer, data.length);
+	drawMapByGetGeoCode(chartContainer, { data, fieldAlias, isShowTooltip }, map, fnCallback) {
+
+		//create inforWindow
+		const inforWindow = new google
+			.maps
+			.InfoWindow();
 
 		//bind event on Map to close inforWindow
 		google.maps.event.addListener(map, 'click', function () {
@@ -252,29 +270,23 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 		};
 	}
 
-	initialMap(chartContainer, dataLength) {
-		const USA = {
-			lat: 37.09024,
-			lng: -95.712891
-		};
-
-		const map = new google
-			.maps
-			.Map(chartContainer, {
-				zoom: 2,
-				center: USA
-			});
-
-		const bounds = new google
-			.maps
-			.LatLngBounds();
-
-		const inforWindow = new google
-			.maps
-			.InfoWindow();
-
-		dataLength === 0 && bounds.extend(new google.maps.LatLng(USA.lat, USA.lng));
-
-		return { map, bounds, inforWindow };
+	initGMap() {
+		return new Promise((resolve, reject) => {
+			const defaultLocate = {
+				lat: 37.09024,
+				lng: -95.712891
+			};
+			if (!!navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition((pos, status) => {
+					const currLocate = {
+						lat: pos.coords.latitude,
+						lng: pos.coords.longitude
+					};
+					resolve(currLocate);
+				});
+			} else {
+				resolve(defaultLocate);
+			}
+		})
 	}
 }

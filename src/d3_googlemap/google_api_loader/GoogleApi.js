@@ -5,7 +5,7 @@ export const GoogleApi = (opts) => {
 		throw new Error('You must pass an apiKey to use GoogleApi');
 	}
 
-	const { apiKey, version, url = 'https://maps.googleapis.com/maps/api/js' } = opts;
+	const { apiKey, version, URL = 'https://maps.googleapis.com/maps/api/js' } = opts;
 	//build url string
 	const url = () => {
 		let params = {
@@ -19,7 +19,7 @@ export const GoogleApi = (opts) => {
 			.map(k => `${k}=${params[k]}`)
 			.join('&');
 
-		return `${url}?${paramStr}`;
+		return `${URL}?${paramStr}`;
 	};
 
 	return url();
