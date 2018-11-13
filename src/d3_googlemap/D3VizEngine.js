@@ -73,7 +73,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 			google.maps.event.addListenerOnce(map, 'tilesloaded', function () {
 				var canvasTags = document.querySelectorAll('canvas');
 				var canvasLength = canvasTags.length;
-				for (var i = 0; i <= canvasLength - 1; i++) {
+				for (var i = 0; i < canvasLength; i++) {
 					var imgTag = new Image();
 					var imgData = canvasTags[i].toDataURL();
 					imgTag.src = imgData;
@@ -92,7 +92,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 			.maps
 			.LatLngBounds();
 
-		data.forEach(item => {
+		data.forEach((item, index) => {
 			//define latitude and longitude
 			const latLng = { lat: parseFloat(item.lat), lng: parseFloat(item.lng) };
 
@@ -111,23 +111,22 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 					icon: markerIcon
 				});
 
+			//if this is the last item => add center map
+			if (index === data.length - 1) {
+				map.fitBounds(bounds);
+				map.panToBounds(bounds);
+			}
 			//check for tooltip
 			if (isShowTooltip) {
 				google.maps.event.addListener(marker, 'click', ((marker, item) => {
 					return () => {
-						const inforHTML = `<p class="gmap-tooltip-text">Lat: ${item.lat}</p><p class="gmap-tooltip-text">Lng : ${item.lng}</p><p class="gmap-tooltip-text">${fieldAlias.metric}: ${item.metricText}</p>`;
+						const inforHTML = `<div class="gmap-tooltip"><p>Lat: ${item.lat}</p><p>Lng : ${item.lng}</p><p>${fieldAlias.metric}: ${item.metricText}</p></div>`;
 						inforWindow.setContent(inforHTML);
 						inforWindow.open(map, marker);
 					};
 				})(marker, item));
 			}
 		});
-
-		//center map
-		if (data.length > 0) {
-			map.fitBounds(bounds);
-			map.panToBounds(bounds);
-		}
 	}
 
 	drawMapByGetGeoCode(chartContainer, { data, fieldAlias, isShowTooltip }, fnCallback) {
@@ -143,7 +142,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 			google.maps.event.addListenerOnce(map, 'tilesloaded', function () {
 				var canvasTags = document.querySelectorAll('canvas');
 				var canvasLength = canvasTags.length;
-				for (var i = 0; i <= canvasLength - 1; i++) {
+				for (var i = 0; i < canvasLength; i++) {
 					var imgTag = new Image();
 					var imgData = canvasTags[i].toDataURL();
 					imgTag.src = imgData;
@@ -219,7 +218,7 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 						//bind event to marker
 						google.maps.event.addListener(marker, 'click', ((marker, item) => {
 							return () => {
-								const inforHTML = `<p class="gmap-tooltip-text">${fieldAlias.geo}: ${item.postcode}</p><p class="gmap-tooltip-text">${fieldAlias.metric}: ${item.metricText}</p>`;
+								const inforHTML = `<div class="gmap-tooltip"><p>${fieldAlias.geo}: ${item.postcode}</p><p>${fieldAlias.metric}: ${item.metricText}</p></div>`;
 								inforWindow.setContent(inforHTML);
 								inforWindow.open(map, marker);
 							};
