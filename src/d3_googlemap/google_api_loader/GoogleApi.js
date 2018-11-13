@@ -5,12 +5,9 @@ export const GoogleApi = (opts) => {
 		throw new Error('You must pass an apiKey to use GoogleApi');
 	}
 
-	const version = 'v=3.34'; //version of google map api
-	const apiKey = opts.apiKey; // the API Key of google map api
-	const URL = opts.url || 'https://maps.googleapis.com/maps/api/js';
+	const { apiKey, version, url = 'https://maps.googleapis.com/maps/api/js' } = opts;
 	//build url string
 	const url = () => {
-		let url = URL;
 		let params = {
 			key: apiKey,
 			version

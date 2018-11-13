@@ -1,4 +1,4 @@
-.izenda-root.izenda-container .izenda .gm-style-iw{
+.izenda-root.izenda-container .izenda .gm-style-iw, .izenda-root.izenda-container .izenda .gm-style-iw > *{
 	background-color: #fff;
 	font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
 	/* font-size: 0.75rem; */

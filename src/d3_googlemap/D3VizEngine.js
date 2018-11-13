@@ -4,13 +4,16 @@ import { GOOGLEMAP_FIELD_MAPPING } from './../utils/CustomVizConstant';
 import { ScriptCache } from './google_api_loader/ScriptCache';
 import { GoogleApi } from './google_api_loader/GoogleApi';
 
-import './assets/styles.css';
+import './styles.css';
 
 const VizEngine = getClass('VizEngine');
 
 const defaultCreateCache = () => {
 	return ScriptCache({
-		google: GoogleApi({ apiKey: 'AIzaSyDTUf-J6QNtYrF4ZJ9NuIsHEySSL-fg0qY' })
+		google: GoogleApi({
+			apiKey: 'GOOGLE_API_KEY', // Please put your GOOGLE_API_KEY here
+			version: 'v=3.34' //GOOGLE MAP API version
+		})
 	});
 };
 
@@ -238,13 +241,14 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 	}
 
 	getPinStyle(item) {
+		const scaleMag = item.value * 10;
 		return {
 			path: google.maps.SymbolPath.CIRCLE,
 			fillColor: item.color || '#ff0000',
-			fillOpacity: .4,
-			scale: 15,
+			fillOpacity: 0.3,
+			scale: scaleMag,
 			strokeColor: '#fff',
-			strokeWeight: .5
+			strokeWeight: 0.5
 		};
 	}
 
