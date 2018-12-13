@@ -1,13 +1,16 @@
-'use strict';
-
 const merge = require('webpack-merge');
 const common = require('./webpack.common.js');
 const Webpack = require('webpack');
 const Path = require('path');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
-const ExtractSASS = new ExtractTextPlugin('styles/bundle.css');
+const dest = Path.join(__dirname, '../dist');
 
 module.exports = merge(common, {
+  entry: [Path.resolve(__dirname, './polyfills'), Path.resolve(__dirname, '../src/visualization.js')],
+  output: {
+    path: dest,
+    filename: 'izenda_visualizations.js'
+  },
   mode: 'production',
   devtool: 'source-map',
   stats: 'errors-only',
@@ -18,10 +21,9 @@ module.exports = merge(common, {
     new Webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production')
     }),
-    new ExtractTextPlugin({ filename: 'bundle.css' }),
+    new ExtractTextPlugin({ filename: 'izenda_visualizations.css' }),
     // compiling mode “scope hoisting”
-    new Webpack.optimize.ModuleConcatenationPlugin(),
-    ExtractSASS
+    new Webpack.optimize.ModuleConcatenationPlugin()
   ],
   resolve: {
     alias: {
@@ -37,7 +39,7 @@ module.exports = merge(common, {
       },
       {
         test: /\.s?css/i,
-        use: ExtractSASS.extract(['css-loader?sourceMap=true&minimize=true', 'sass-loader'])
+        use: ExtractTextPlugin.extract(['css-loader?sourceMap=true&minimize=true', 'sass-loader'])
       }
     ]
   }

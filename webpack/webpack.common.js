@@ -10,14 +10,8 @@ const HtmlWebpackExternalsPlugin = require('html-webpack-externals-plugin');
 const dest = Path.join(__dirname, '../dist');
 
 module.exports = {
-  entry: [Path.resolve(__dirname, './polyfills'), Path.resolve(__dirname, '../src/index')],
-  output: {
-    path: dest,
-    filename: 'bundle.[hash].js'
-  },
   plugins: [
     new CleanWebpackPlugin([dest]),
-    new CopyWebpackPlugin([{ from: Path.resolve(__dirname, '../public'), to: 'public' }]),
     new HtmlWebpackPlugin({
       template: Path.resolve(__dirname, '../src/index.html')
     }),
@@ -104,8 +98,7 @@ module.exports = {
           global: 'IzendaSynergy'
         }
       ]
-    }),
-    new Webpack.HotModuleReplacementPlugin()
+    })
   ],
   resolve: {
     alias: {

@@ -1,0 +1,58 @@
+.d3-tooltip{
+	background-color: #fff;
+	border: 2px solid #b2cbdb;
+	padding: 5px;
+	position: absolute;
+	font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
+	font-size: 0.75rem;
+	white-space: nowrap;
+	color: #000;
+	margin-left: 0px;
+	margin-top: 0px;
+	left: 8px;
+	top: 8px;
+	pointer-events: none;
+}
+.d3-tooltip .text-name{
+	display: block;
+	font-weight: 600;
+	position: relative;
+	margin-bottom: 5px;
+	padding-left: 0.75rem;
+}
+.d3-tooltip .text-name:before{
+	position: absolute;
+	content: '';
+	width: 0.5rem;
+	height: 0.5rem;
+	display: block;
+	border-radius: 50%;
+	background-color: #7cb5ec;
+	top: 2px;
+  left: 0;
+}
+.brush .extent {
+  stroke: gray;
+  fill: dodgerblue;
+  fill-opacity: 0.365;
+}
+.chart-label{
+	color: #707070;
+  fill: #707070;
+}
+.axis path, .axis line{
+	stroke: #C0D0E0;
+}
+.miniGroupText{
+	font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    white-space: nowrap;
+    color: rgb(96, 96, 96);
+    cursor: default;
+    margin-left: 0px;
+    margin-top: 0px;
+    transform: rotate(0deg);
+    transform-origin: 50% 11px 0px;
+    text-overflow: clip;
+    opacity: 1;
+}

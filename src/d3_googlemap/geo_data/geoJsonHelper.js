@@ -1,0 +1,1 @@
+import {geoData} from './geoJson';

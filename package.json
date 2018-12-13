@@ -4,7 +4,7 @@
   "description": "The examples of how to customize or extend Izenda visualizations",
   "scripts": {
     "build": "webpack --config webpack/webpack.config.prod.js  --colors",
-    "dev": "webpack-dev-server --config webpack/webpack.config.dev.js --content-base dev"
+    "dev": "webpack-dev-server --config webpack/webpack.config.dev.js --content-base dev --history-api-fallback"
   },
   "repository": {
     "type": "git",
@@ -69,6 +69,12 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.9.0",
-    "highcharts": "^4.2.7"
+    "d3": "^5.6.0",
+    "d3-selection-multi": "^1.0.1",
+    "highcharts": "^4.2.7",
+    "lodash": "^4.17.10",
+    "moment": "^2.13.0",
+    "moment-range": "^2.2.0",
+    "moment-timezone": "^0.5.4"
   }
 }
