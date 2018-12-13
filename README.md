@@ -10,6 +10,8 @@ This repo contains code examples showing how to customize or extend the Izenda v
   ![3D Scatter Chart](docs/imgs/3D_Scatter.png)
 - Column No Space (/src/columnnospace) demonstrates the ability of extending a column chart by altering the padding between the columns to show no space between the groupings.
   ![Column No Space](docs/imgs/ColumnNoSpace.png)
+- D3 Timeline (src/d3_timeline) demonstrates the ability of implementing a timeline chart using D3.js.
+- Google Map (src/d3_googlemap) demonstrates the ability of implementing a custom Map visualization using Google Map api.
 
 ### Installation
 
@@ -33,7 +35,36 @@ npm run dev
 npm run build
 ```
 
-## Getting Started
+### Deploy the custom visualization into Izenda app
+
+#### Step 1: Run production build
+
+```
+npm run build
+```
+
+It produces the compiled files in ./dist folder
+
+#### Step 2: Copy izenda_visualizations.js and izenda_visualizations.css into Izenda UI folder inside the hosting application
+
+#### Step 3: Include those files in the index.html or the Izenda UI hosting page like other izenda_ui.js, izenda_ui.css files.
+
+## Configure the Google Map visualization
+
+Set Google Map API key in src/d3_googlemap/D3VizEngine.js file
+
+```javascript
+const defaultCreateCache = () => {
+  return ScriptCache({
+    google: GoogleApi({
+      apiKey: 'GOOGLE_API_KEY', // Please put your GOOGLE_API_KEY here
+      version: 'v=3.34' //GOOGLE MAP API version
+    })
+  });
+};
+```
+
+## How to create a custom Izenda visualization
 
 ### Step 1 - Integrate Izenda UI library into Webpack configuration
 
