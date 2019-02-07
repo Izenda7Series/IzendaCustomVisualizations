@@ -1,4 +1,4 @@
-# Izenda Custom Visualizations
+# Izenda Custom Visualizations 
 
 > _Note that this example is meant to demonstrate the flexibility of the Izenda JS API to adopt the various requirements on building a custom chart._
 
