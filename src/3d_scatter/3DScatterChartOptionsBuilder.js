@@ -65,7 +65,7 @@ export default class ThreeDScatterChartOptionsBuilder extends ScatterChartOption
           const { record } = point;
           const zRawData = record[zFieldMapping.columnName];
 
-          isMultiColor && (point.color = gradientEffectColor(point.color));
+          isMultiColor && point.color && (point.color = gradientEffectColor(point.color));
 
           Object.assign(point, {
             zRawData,
