@@ -287,6 +287,6 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 			} else {
 				resolve(defaultLocate);
 			}
-		})
+		});
 	}
 }
