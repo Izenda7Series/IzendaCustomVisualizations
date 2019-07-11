@@ -277,16 +277,20 @@ export default class D3GoogleMapVizEngine extends VizEngine {
 				lng: -95.712891
 			};
 			if (!!navigator.geolocation) {
-				navigator.geolocation.getCurrentPosition((pos, status) => {
+				navigator.geolocation.getCurrentPosition(
+				  (pos, status) => {
 					const currLocate = {
-						lat: pos.coords.latitude,
-						lng: pos.coords.longitude
+					  lat: pos.coords.latitude,
+					  lng: pos.coords.longitude
 					};
 					resolve(currLocate);
-				});
-			} else {
+				  },
+				  () => resolve(defaultLocate),
+				  { timeout: 10000 }
+				);
+			  } else {
 				resolve(defaultLocate);
-			}
+			  }
 		});
 	}
 }
