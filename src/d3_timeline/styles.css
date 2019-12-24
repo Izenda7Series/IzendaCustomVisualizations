@@ -1,4 +1,4 @@
-.d3-tooltip{
+.d3-timeline-tooltip{
 	background-color: #fff;
 	border: 2px solid #b2cbdb;
 	padding: 5px;
@@ -13,14 +13,14 @@
 	top: 8px;
 	pointer-events: none;
 }
-.d3-tooltip .text-name{
+.d3-timeline-tooltip .text-name{
 	display: block;
 	font-weight: 600;
 	position: relative;
 	margin-bottom: 5px;
 	padding-left: 0.75rem;
 }
-.d3-tooltip .text-name:before{
+.d3-timeline-tooltip .text-name:before{
 	position: absolute;
 	content: '';
 	width: 0.5rem;

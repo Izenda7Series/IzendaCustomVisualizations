@@ -4,10 +4,10 @@ import {
   extendReportPartStyleConfiguration,
   createFieldContainerSchema
 } from 'IzendaSynergy';
-import D3VizEngine from './D3VizEngine';
+import D3TimelineVizEngine from './D3TimelineVizEngine';
 import D3TimelineOptionsBuilder from './D3TimelineOptionsBuilder';
 
-registerVisualizationEngine('D3', D3VizEngine);
+registerVisualizationEngine('D3Timeline', D3TimelineVizEngine);
 
 /**
  * Extend the chart visualization by specifying
@@ -27,7 +27,7 @@ extendReportPartStyleConfiguration(REPORT_PART_TYPES.Chart, 'Timeline', null, {
    */
   visualLabel: 'Timeline',
 
-  visualEngine: 'D3',
+  visualEngine: 'D3Timeline',
 
   /**
    * Declare Z-Axis Values field container
