@@ -3409,9 +3409,9 @@ he@1.1.x:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/he/-/he-1.1.1.tgz#93410fd21b009735151f8868c2f271f3427e23fd"
 
-highcharts@^4.2.7:
-  version "4.2.7"
-  resolved "https://registry.yarnpkg.com/highcharts/-/highcharts-4.2.7.tgz#45cbed8e99c9c042e95f9c51076726496f686862"
+highcharts@^6.1.0:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/highcharts/-/highcharts-6.1.0.tgz#115a6ee10ad36a53d9913f1030c6d46da16c7cb5"
 
 hmac-drbg@^1.0.0:
   version "1.0.1"
@@ -5028,7 +5028,7 @@ once@^1.3.0, once@^1.3.1, once@^1.4.0:
 
 onetime@^1.0.0:
   version "1.1.0"
-  resolved "http://registry.npmjs.org/onetime/-/onetime-1.1.0.tgz#a1f7838f8314c516f05ecefcbc4ccfe04b4ed789"
+  resolved "https://registry.npmjs.org/onetime/-/onetime-1.1.0.tgz#a1f7838f8314c516f05ecefcbc4ccfe04b4ed789"
 
 onetime@^2.0.0:
   version "2.0.1"
