@@ -12,3 +12,7 @@ setReportPartConfiguration(REPORT_PART_TYPES.Chart, chartConfiguration);
 const mapConfiguration = getReportPartConfiguration(REPORT_PART_TYPES.Map);
 mapConfiguration.model = EnhancedReportPartMapContent;
 setReportPartConfiguration(REPORT_PART_TYPES.Map, mapConfiguration);
+
+const gaugeConfiguration = getReportPartConfiguration(REPORT_PART_TYPES.Gauge);
+gaugeConfiguration.model = EnhancedReportPartGaugeContent;
+setReportPartConfiguration(REPORT_PART_TYPES.Gauge, gaugeConfiguration);
