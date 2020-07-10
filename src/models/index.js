@@ -1,5 +1,6 @@
 import EnhancedReportPartChartContent from './EnhancedReportPartChartContent';
 import EnhancedReportPartMapContent from './EnhancedReportPartMapContent';
+import EnhancedReportPartGaugeContent from './EnhancedReportPartGaugeContent';
 import {REPORT_PART_TYPES, getReportPartConfiguration, setReportPartConfiguration} from 'IzendaSynergy';
 
 /**
