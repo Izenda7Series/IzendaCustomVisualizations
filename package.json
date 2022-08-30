@@ -75,6 +75,6 @@
     "lodash": "^4.17.10",
     "moment": "^2.13.0",
     "moment-range": "^2.2.0",
-    "moment-timezone": "^0.5.4"
+    "moment-timezone": "^0.5.35"
   }
 }
