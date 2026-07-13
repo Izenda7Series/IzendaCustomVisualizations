@@ -32,12 +32,12 @@ module.exports = {
                 context: Path.resolve(__dirname, '../libs')
               }
             },
-            {
+            /*{
               path: 'izenda_common.js',
               cwpPatternConfig: {
                 context: Path.resolve(__dirname, '../libs')
               }
-            },
+            },*/
             {
               path: 'izenda_locales.js',
               cwpPatternConfig: {
