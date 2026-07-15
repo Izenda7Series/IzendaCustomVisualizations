@@ -1,6 +1,5 @@
 import { getClass } from 'IzendaSynergy';
 import * as d3 from 'd3';
-import 'd3-selection-multi';
 import './styles.css';
 import { helpers } from '../utils/CustomVizHelper';
 
@@ -48,7 +47,7 @@ export default class D3TimelineVizEngine extends VizEngine {
       const svg = d3
         .select(chartContainer)
         .append('svg')
-        .styles({ 'shape-rendering': 'crispEdges' })
+        .style('shape-rendering', 'crispEdges')
         .attr('width', width + margin[1] + margin[3])
         .attr('height', height + margin[0] + margin[2]);
       //add plot area and bind setting color
@@ -253,7 +252,7 @@ export default class D3TimelineVizEngine extends VizEngine {
 
         if (!isShowTooltip) return;
         selection
-          .on('mouseover.d3-timeline-tooltip', d => {
+          .on('mouseover.d3-timeline-tooltip', (event, d) => {
             //get data of item and then render into html
             const htmlTooltip = `<p class="text-name">${fieldNameAlias.groupField}: ${helpers.getSettings(
               groupOptions,
@@ -272,12 +271,12 @@ export default class D3TimelineVizEngine extends VizEngine {
               .style('opacity', 1);
             tooltip
               .html(htmlTooltip)
-              .style('left', `${d3.event.pageX + 5}px`)
-              .style('top', `${d3.event.pageY + 5}px`);
+              .style('left', `${event.pageX + 5}px`)
+              .style('top', `${event.pageY + 5}px`);
           })
-          .on('mousemove.d3-timeline-tooltip', () => {
+          .on('mousemove.d3-timeline-tooltip', event => {
             //update tooltip's position
-            tooltip.style('left', `${d3.event.pageX + 5}px`).style('top', `${d3.event.pageY + 5}px`);
+            tooltip.style('left', `${event.pageX + 5}px`).style('top', `${event.pageY + 5}px`);
           })
           .on('mouseout.d3-timeline-tooltip', () => {
             //transition and hide tooltip
@@ -288,9 +287,9 @@ export default class D3TimelineVizEngine extends VizEngine {
           });
       };
 
-      function brushed() {
+      function brushed(event) {
         //get brush selection
-        const selection = d3.event && d3.event.selection;
+        const selection = event && event.selection;
 
         //return immediatelly with no detected selection
         if (!selection) return;
@@ -326,12 +325,8 @@ export default class D3TimelineVizEngine extends VizEngine {
           .attr('y', d => y1(d.groupId) + 3)
           .attr('width', d => x1(d.parsedEnd) - x1(d.parsedStart) || 0)
           .attr('height', d => y1(1) - 6)
-          .styles(d => ({
-            'stroke-width': 6,
-            fill: () => {
-              return d.fillColor ? d.fillColor : colorScale(d.groupId);
-            }
-          }))
+          .style('stroke-width', 6)
+          .style('fill', d => (d.fillColor ? d.fillColor : colorScale(d.groupId)))
           .call(_tooltip);
 
         //notify finish renderring

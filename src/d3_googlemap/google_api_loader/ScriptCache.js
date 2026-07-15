@@ -1,6 +1,6 @@
 let counter = 0;
-let scriptMap = typeof window !== 'undefined' && window._scriptMap || new Map();
-const window = (typeof self === 'object' && self.self === self && self) || (typeof global === 'object' && global.global === global && global) || this;
+const globalObject = (typeof self === 'object' && self.self === self && self) || (typeof global === 'object' && global.global === global && global) || this;
+let scriptMap = (globalObject && globalObject._scriptMap) || new Map();
 
 export const ScriptCache = (function (global) {
 		global._scriptMap = global._scriptMap || scriptMap;

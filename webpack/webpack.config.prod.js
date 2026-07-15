@@ -1,12 +1,13 @@
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
 const Webpack = require('webpack');
 const Path = require('path');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const dest = Path.join(__dirname, '../dist');
 
 module.exports = merge(common, {
-  entry: [Path.resolve(__dirname, './polyfills'), Path.resolve(__dirname, '../src/visualization.js')],
+  entry: [Path.resolve(__dirname, '../src/visualization.js')],
   output: {
     path: dest,
     filename: 'izenda_visualizations.js'
@@ -15,15 +16,14 @@ module.exports = merge(common, {
   devtool: 'source-map',
   stats: 'errors-only',
   optimization: {
-    minimize: true
+    minimize: true,
+    minimizer: ['...', new CssMinimizerPlugin()]
   },
   plugins: [
     new Webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production')
     }),
-    new ExtractTextPlugin({ filename: 'izenda_visualizations.css' }),
-    // compiling mode “scope hoisting”
-    new Webpack.optimize.ModuleConcatenationPlugin()
+    new MiniCssExtractPlugin({ filename: 'izenda_visualizations.css' })
   ],
   resolve: {
     alias: {
@@ -39,7 +39,11 @@ module.exports = merge(common, {
       },
       {
         test: /\.s?css/i,
-        use: ExtractTextPlugin.extract(['css-loader?sourceMap=true&minimize=true', 'sass-loader'])
+        use: [
+          MiniCssExtractPlugin.loader,
+          { loader: 'css-loader', options: { sourceMap: true } },
+          { loader: 'sass-loader', options: { api: 'modern' } }
+        ]
       }
     ]
   }

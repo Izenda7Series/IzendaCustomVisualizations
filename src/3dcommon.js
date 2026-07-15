@@ -1,6 +1,13 @@
-import { getClass } from 'IzendaSynergy';
-import highchart3d from 'highcharts/highcharts-3d';
+import { getClass } from "IzendaSynergy";
 
-const { VisualizationLibrary } = getClass('HighchartVizEngine');
+const { VisualizationLibrary } = getClass("HighchartVizEngine");
 
-highchart3d(VisualizationLibrary);
+//Replace with the global Highcharts instance to load 3D module
+const previousGlobalHighcharts = window._Highcharts;
+window._Highcharts = VisualizationLibrary;
+
+try {
+  require("highcharts/highcharts-3d");
+} finally {
+  window._Highcharts = previousGlobalHighcharts;
+}

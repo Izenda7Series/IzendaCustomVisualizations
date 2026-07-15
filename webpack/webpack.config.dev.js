@@ -1,43 +1,55 @@
 'use strict';
 
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
 const Webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const ESLintWebpackPlugin = require('eslint-webpack-plugin');
 const Path = require('path');
 
 const dest = Path.join(__dirname, '../dist');
 
 module.exports = merge(common, {
-  entry: [Path.resolve(__dirname, './polyfills'), Path.resolve(__dirname, '../src/index')],
+  entry: [Path.resolve(__dirname, '../src/index')],
   output: {
     path: dest,
-    filename: 'bundle.[hash].js'
+    filename: 'bundle.[hash].js',
+    publicPath: '/'
   },
   mode: 'development',
   devtool: 'cheap-module-source-map',
+  watchOptions: {
+    ignored: /node_modules/
+  },
   devServer: {
-    contentBase: dest,
-    inline: true
+    static: {
+      directory: dest
+    },
+    historyApiFallback: true,
+    hot: true,
+    liveReload: true,
+    client: {
+      overlay: {
+        errors: true,
+        warnings: false
+      }
+    }
   },
   plugins: [
     new Webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('development')
     }),
-    new CopyWebpackPlugin([{ from: Path.resolve(__dirname, '../public'), to: 'public' }]),
-    new Webpack.HotModuleReplacementPlugin()
+    new CopyWebpackPlugin({
+      patterns: [{ from: Path.resolve(__dirname, '../public'), to: 'public' }]
+    }),
+    new Webpack.HotModuleReplacementPlugin(),
+    new ESLintWebpackPlugin({
+      context: Path.resolve(__dirname, '../src'),
+      emitWarning: true
+    })
   ],
   module: {
     rules: [
-      {
-        test: /\.(js)$/,
-        include: Path.resolve(__dirname, '../src'),
-        enforce: 'pre',
-        loader: 'eslint-loader',
-        options: {
-          emitWarning: true
-        }
-      },
       {
         test: /\.(js)$/,
         include: Path.resolve(__dirname, '../src'),
@@ -45,7 +57,11 @@ module.exports = merge(common, {
       },
       {
         test: /\.s?css$/i,
-        use: ['style-loader', 'css-loader?sourceMap=true', 'sass-loader']
+        use: [
+          'style-loader',
+          { loader: 'css-loader', options: { sourceMap: true } },
+          { loader: 'sass-loader', options: { api: 'modern' } }
+        ]
       }
     ]
   }
