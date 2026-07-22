@@ -23,6 +23,8 @@ This repo contains code examples showing how to customize or extend the Izenda v
 npm install
 ```
 
+> **Note:** The `--openssl-legacy-provider` flag is required on Node.js 17+ (which uses OpenSSL 3). This flag is already baked into the npm scripts via `cross-env`.
+
 ### Start Dev Server
 
 ```
@@ -68,95 +70,69 @@ const defaultCreateCache = () => {
 
 ### Step 1 - Integrate Izenda UI library into Webpack configuration
 
-To integrate Izenda UI library with Webpack build as the external library, we uses [html-webpack-externals-plugin](https://www.npmjs.com/package/html-webpack-externals-plugin) to simplify Izenda UI integration settings, let them automatically adjust the externals property of Webpack config, copy and bunble the Izenda UI assets to the output.
+To integrate the Izenda UI library with Webpack, `IzendaSynergy` and `jQuery` are declared as [externals](https://webpack.js.org/configuration/externals/) so that `import { ... } from 'IzendaSynergy'` resolves to the global `IzendaSynergy` object at runtime without bundling the library. The Izenda UI assets are copied into the build output using [CopyWebpackPlugin](https://www.npmjs.com/package/copy-webpack-plugin).
 
-The configuration has been set in /webpack/webpack.common.js config file
+The configuration is in `/webpack/webpack.common.js`:
 
 ```javascript
-{
-  // Name of module. It allows using import('IzendaSynergy') in the code regardless its location.
-  // The plugin also uses the name of module when probbing Izenda UI file assets under /libs folder which is configured as the context path.
-  module: 'IzendaSynergy',
+'use strict';
 
-  // The order of entry does matter. The lower entry depends on upper entry.
-  entry: [
-    {
-      path: 'izenda-ui.css',
-      type: 'css',
-      cwpPatternConfig: {
-        context: Path.resolve(__dirname, '../libs')
-      }
-    },
-    {
-      path: 'izenda_common.js',
-      cwpPatternConfig: {
-        context: Path.resolve(__dirname, '../libs')
-      }
-    },
-    {
-      path: 'izenda_locales.js',
-      cwpPatternConfig: {
-        context: Path.resolve(__dirname, '../libs')
-      }
-    },
-    {
-      path: 'izenda_vendors.js',
-      cwpPatternConfig: {
-        context: Path.resolve(__dirname, '../libs')
-      }
-    },
-    {
-      path: 'izenda_ui.js',
-      cwpPatternConfig: {
-        context: Path.resolve(__dirname, '../libs')
-      }
-    }
-  ],
-  // Additional assets that need to be copied into the output path
-  supplements: [
-    {
-      path: 'assets/',
-      cwpPatternConfig: {
-        context: Path.resolve(__dirname, '../libs')
-      }
-    },
-    {
-      path: 'plugins/',
-      cwpPatternConfig: {
-        context: Path.resolve(__dirname, '../libs')
-      }
-    },
-    {
-      path: 'skins/',
-      cwpPatternConfig: {
-        context: Path.resolve(__dirname, '../libs')
-      }
-    },
-    {
-      path: 'themes/',
-      cwpPatternConfig: {
-        context: Path.resolve(__dirname, '../libs')
-      }
-    },
-    // The source map files are optional.
-    {
-      path: 'izenda_ui.js.map',
-      cwpPatternConfig: {
-        context: Path.resolve(__dirname, '../libs')
-      }
-    },
-    {
-      path: 'izenda_vendors.js.map',
-      cwpPatternConfig: {
-        context: Path.resolve(__dirname, '../libs')
-      }
-    }
-  ],
+const Path = require('path');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-  // The name of module exported globally. It can be accessed using the global name.
-  global: 'IzendaSynergy'
-}
+const synergyLibs = Path.resolve(__dirname, '../libs/IzendaSynergy');
+
+module.exports = {
+  output: {
+    clean: true
+  },
+  // Declare IzendaSynergy and jQuery as externals — they are loaded via
+  // script tags in the hosting page and must not be bundled.
+  externals: {
+    jquery: 'jQuery',
+    IzendaSynergy: 'IzendaSynergy'
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: Path.resolve(__dirname, '../src/index.html')
+    }),
+    // Copy Izenda UI files from libs/IzendaSynergy into the dist output
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: Path.join(synergyLibs, 'izenda-ui.css'), to: 'IzendaSynergy/izenda-ui.css' },
+        { from: Path.join(synergyLibs, 'izenda_locales.js'), to: 'IzendaSynergy/izenda_locales.js' },
+        { from: Path.join(synergyLibs, 'izenda_vendors.js'), to: 'IzendaSynergy/izenda_vendors.js' },
+        { from: Path.join(synergyLibs, 'izenda_ui.js'), to: 'IzendaSynergy/izenda_ui.js' },
+        { from: Path.join(synergyLibs, 'izenda_ui.js.map'), to: 'IzendaSynergy/izenda_ui.js.map' },
+        { from: Path.join(synergyLibs, 'izenda_vendors.js.map'), to: 'IzendaSynergy/izenda_vendors.js.map' },
+        { from: Path.join(synergyLibs, 'assets'), to: 'IzendaSynergy/assets' },
+        { from: Path.join(synergyLibs, 'plugins'), to: 'IzendaSynergy/plugins' },
+        { from: Path.join(synergyLibs, 'skins'), to: 'IzendaSynergy/skins' },
+        { from: Path.join(synergyLibs, 'themes'), to: 'IzendaSynergy/themes' }
+      ]
+    })
+  ],
+  resolve: {
+    alias: {
+      '~': Path.resolve(__dirname, '../src')
+    }
+  },
+  module: {
+    rules: [
+      {
+        test: /\.(ico|jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2)(\?.*)?$/,
+        type: 'asset/resource',
+        generator: {
+          filename: '[path][name][ext]'
+        }
+      }
+    ]
+  }
+};
 ```
+
+The production build (`webpack.config.prod.js`) uses `src/visualization.js` as the entry point and outputs `izenda_visualizations.js` and `izenda_visualizations.css`. It adds Babel transpilation via `babel-loader` and CSS extraction via `MiniCssExtractPlugin`.
 
 ### Step 2 - Take a sample chart and start coding
 
